@@ -1,0 +1,4 @@
+[tasks.clippy]
+description = "Run cargo clippy for all workspace targets with warnings as errors"
+command = "cargo"
+args = ["clippy", "--workspace", "--all-targets", "--", "-D", "warnings"]
