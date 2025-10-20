@@ -1,0 +1,10 @@
+[package]
+name = "model-a-non-avdm"
+description = "Non Always-Valid Domain Model(悪い例)"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+uuid = { workspace = true }
+time = { workspace = true }
+thiserror = { workspace = true }
