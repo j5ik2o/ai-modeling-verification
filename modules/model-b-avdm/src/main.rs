@@ -1,5 +1,3 @@
-mod session;
-
-pub fn main() {
-    println!("Hello, world!");
+fn main() {
+    println!("model-b-avdm: run domain-specific experiments via library APIs");
 }

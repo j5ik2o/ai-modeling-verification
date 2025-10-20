@@ -1,5 +1,3 @@
-mod session;
-
-pub fn main() {
-    println!("Hello, world!");
+fn main() {
+    println!("model-a-non-avdm: procedural billing demo");
 }

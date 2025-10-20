@@ -2,7 +2,8 @@
 resolver = "2"
 members = [
     "modules/model-a-non-avdm",
-    "modules/model-b-avdm"
+    "modules/model-b-avdm",
+    "spec-tests"
 ]
 
 
