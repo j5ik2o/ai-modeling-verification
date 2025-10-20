@@ -17,6 +17,11 @@ pub struct Session {
   pub already_billed: bool,
 }
 
+/// 1 セッションあたりの最大課金額（円）。
+const MAX_AMOUNT_YEN: u32 = 1_000_000;
+/// 1 セッションあたりの最大エネルギー量（ミリkWh）。
+const MAX_KWH_MILLI: u64 = 1_000_000;
+
 /// `Session` の生データを手続き的に処理して料金を算出する。
 /// 無料5分の按分・端数切り捨て・停止後課金禁止など spec.md の要件を
 /// 呼び出し側で順守するための薄いユーティリティ。
@@ -47,6 +52,13 @@ pub fn calculate_charge(session: &mut Session) -> Result<u32, String> {
     ));
   }
 
+  if session.kwh_milli > MAX_KWH_MILLI {
+    return Err(format!(
+      "energy {} exceeds max {}",
+      session.kwh_milli, MAX_KWH_MILLI
+    ));
+  }
+
   let duration_ms = (ended_at - started_at) as f64;
   if duration_ms <= 0.0 {
     return Err("duration must be positive".to_string());
@@ -60,6 +72,10 @@ pub fn calculate_charge(session: &mut Session) -> Result<u32, String> {
 
   let billed_energy_kwh = billed_energy_milli as f64 / 1_000.0;
   let amount = (billed_energy_kwh * session.rate_yen_per_kwh as f64).floor() as u32;
+
+  if amount > MAX_AMOUNT_YEN {
+    return Err(format!("amount {} exceeds max {}", amount, MAX_AMOUNT_YEN));
+  }
 
   session.already_billed = true;
 
@@ -107,5 +123,36 @@ mod tests {
 
     assert_eq!(session.billed_kwh_milli, 0);
     assert_eq!(amount, 0);
+  }
+
+  #[test]
+  fn error_when_already_billed() {
+    let mut session = new_session(0, 6 * 60 * 1000, 2_400, 50);
+    session.already_billed = true;
+    assert!(calculate_charge(&mut session).is_err());
+  }
+
+  #[test]
+  fn error_when_status_not_closed() {
+    let mut session = new_session(0, 6 * 60 * 1000, 2_400, 50);
+    session.status = "active".to_string();
+    assert!(calculate_charge(&mut session).is_err());
+  }
+
+  #[test]
+  fn error_when_missing_start_or_end() {
+    let mut session = new_session(0, 6 * 60 * 1000, 2_400, 50);
+    session.started_at = None;
+    assert!(calculate_charge(&mut session).is_err());
+
+    let mut session = new_session(0, 6 * 60 * 1000, 2_400, 50);
+    session.ended_at = None;
+    assert!(calculate_charge(&mut session).is_err());
+  }
+
+  #[test]
+  fn error_when_end_before_start() {
+    let mut session = new_session(5 * 60 * 1000, 4 * 60 * 1000, 1_000, 80);
+    assert!(calculate_charge(&mut session).is_err());
   }
 }

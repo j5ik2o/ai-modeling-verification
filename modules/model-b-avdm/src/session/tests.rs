@@ -1,4 +1,5 @@
 use super::*;
+use crate::session::MAX_YEN;
 use time::{Duration, OffsetDateTime};
 
 fn ts(sec: i64) -> OffsetDateTime {
@@ -99,4 +100,61 @@ fn closed_session_rejects_additional_billing() {
     .bill_after_stop(end + Duration::minutes(1), energy)
     .expect_err("billing after stop should fail");
   assert!(matches!(err, SessionValueError::AlreadyClosed { .. }));
+}
+
+#[test]
+fn active_accessors_return_none() {
+  let id = SessionId::new(uuid::Uuid::nil());
+  let start = ts(0);
+  let rate = RateYenPerKwh::new(40).expect("positive rate");
+  let session = Session::new_active(id, start, rate);
+  assert!(session.ended_at().is_none());
+  assert!(session.total_energy().is_none());
+  assert!(session.billed_energy().is_none());
+  assert!(session.charged_amount().is_none());
+}
+
+#[test]
+fn rate_rejects_zero_value() {
+  assert!(RateYenPerKwh::new(0).is_err());
+}
+
+#[test]
+fn money_rejects_amount_over_max() {
+  assert!(MoneyYen::new(MAX_YEN + 1).is_err());
+  assert!(MoneyYen::try_from_u128((MAX_YEN as u128) + 1).is_err());
+}
+
+#[test]
+fn bill_snapshot_rejects_mismatched_closed_session() {
+  let id = SessionId::new(uuid::Uuid::nil());
+  let start = ts(0);
+  let rate = RateYenPerKwh::new(50).expect("positive rate");
+  let end = ts(6 * 60);
+  let energy = KwhMilli::new(2_400).expect("energy");
+  let closed = Session::new_active(id, start, rate)
+    .stop(end, energy)
+    .expect("stop works");
+
+  let err = closed
+    .bill_snapshot(end + Duration::minutes(1), energy)
+    .expect_err("mismatched snapshot should fail");
+  assert!(matches!(err, SessionValueError::AlreadyClosed { .. }));
+}
+
+#[test]
+fn bill_after_stop_active_delegates_to_snapshot() {
+  let id = SessionId::new(uuid::Uuid::nil());
+  let start = ts(0);
+  let rate = RateYenPerKwh::new(50).expect("positive rate");
+  let session = Session::new_active(id, start, rate);
+  let energy = KwhMilli::new(2_400).expect("energy");
+  let end = ts(6 * 60);
+
+  let expected = session.bill_snapshot(end, energy).expect("snapshot works");
+  let result = session
+    .bill_after_stop(end, energy)
+    .expect("active bill_after_stop should succeed");
+  assert_eq!(result.0, expected.0);
+  assert_eq!(result.1, expected.1);
 }

@@ -3,6 +3,7 @@ use spec_tests::{BillingResult, BillingSession, ClosedBillingSession};
 
 const BASE_START_MS: i64 = 0;
 const MINUTE_MS: i64 = 60 * 1_000;
+const MAX_KWH_MILLI: i64 = 1_000_000;
 
 struct StopCase {
   name: &'static str,
@@ -73,10 +74,20 @@ const STOP_CASES: &[StopCase] = &[
       amount_yen: 0,
     },
   },
+  StopCase {
+    name: "scenario13_max_amount_boundary",
+    duration_minutes: 10,
+    energy_milli: MAX_KWH_MILLI,
+    rate_yen_per_kwh: 2_000,
+    expected: BillingResult {
+      billed_energy_milli: 500_000,
+      amount_yen: 1_000_000,
+    },
+  },
 ];
 
 #[test]
-fn scenarios_1_to_4_and_7_8_match() {
+fn stop_scenarios_match_expected() {
   for case in STOP_CASES {
     assert_stop_case::<ModelASession, _>("model-a", case);
     assert_stop_case::<ModelBSession, _>("model-b", case);
@@ -170,6 +181,67 @@ fn scenario12_rounding_is_floor_and_monotonic() {
   let short_b = assert_stop_case::<ModelBSession, _>("model-b", &short_case);
   let long_b = assert_stop_case::<ModelBSession, _>("model-b", &long_case);
   assert!(long_b.amount_yen >= short_b.amount_yen);
+}
+
+#[test]
+fn scenario14_amount_over_limit_is_rejected() {
+  assert_amount_over_limit_rejected::<ModelASession, _>("model-a");
+  assert_amount_over_limit_rejected::<ModelBSession, _>("model-b");
+}
+
+#[test]
+fn scenario15_energy_over_limit_is_rejected() {
+  assert_energy_over_limit_rejected::<ModelASession, _>("model-a");
+  assert_energy_over_limit_rejected::<ModelBSession, _>("model-b");
+}
+
+fn assert_amount_over_limit_rejected<S, E>(model_name: &str)
+where
+  S: BillingSession<Error = E>,
+  S::ClosedSession: ClosedBillingSession<Error = E>,
+  E: std::fmt::Display,
+{
+  let session = S::start(BASE_START_MS, 2_001).unwrap_or_else(|err| {
+    panic!(
+      "{} start failed for over-limit scenario: {}",
+      model_name, err
+    )
+  });
+  let snapshot = session.bill_snapshot(end_timestamp(10), 1_000_000);
+  assert!(
+    snapshot.is_err(),
+    "{} should reject snapshot when amount exceeds limit",
+    model_name
+  );
+  let stop_result = session.stop(end_timestamp(10), 1_000_000);
+  assert!(
+    stop_result.is_err(),
+    "{} should reject stop when amount exceeds limit",
+    model_name
+  );
+}
+
+fn assert_energy_over_limit_rejected<S, E>(model_name: &str)
+where
+  S: BillingSession<Error = E>,
+  S::ClosedSession: ClosedBillingSession<Error = E>,
+  E: std::fmt::Display,
+{
+  let over_limit = MAX_KWH_MILLI + 1;
+  let session = S::start(BASE_START_MS, 60)
+    .unwrap_or_else(|err| panic!("{} start failed for energy over-limit: {}", model_name, err));
+  let snapshot = session.bill_snapshot(end_timestamp(10), over_limit);
+  assert!(
+    snapshot.is_err(),
+    "{} should reject snapshot when energy exceeds limit",
+    model_name
+  );
+  let stop_result = session.stop(end_timestamp(10), over_limit);
+  assert!(
+    stop_result.is_err(),
+    "{} should reject stop when energy exceeds limit",
+    model_name
+  );
 }
 
 fn assert_stop_case<S, E>(model_name: &str, case: &StopCase) -> BillingResult
