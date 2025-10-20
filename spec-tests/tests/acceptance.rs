@@ -86,6 +86,7 @@ const STOP_CASES: &[StopCase] = &[
   },
 ];
 
+/// 開始から5分無料・ゼロエネルギー・長時間利用・最大課金額境界など代表的な停止ケースで、課金結果が期待通りになることを確認する。
 #[test]
 fn stop_scenarios_match_expected() {
   for case in STOP_CASES {
@@ -94,6 +95,7 @@ fn stop_scenarios_match_expected() {
   }
 }
 
+/// 進行中に複数回スナップショット課金を行っても、無料5分以降は金額が単調増加し、途中計算に矛盾が生じないことを確認する。
 #[test]
 fn scenario5_progressive_billing_is_monotonic() {
   let snapshots = [
@@ -127,30 +129,35 @@ fn scenario5_progressive_billing_is_monotonic() {
   assert_snapshots::<ModelBSession, _>("model-b", 50, &snapshots);
 }
 
+/// セッションを停止した後に課金しようとすると、両モデルとも「停止済み」として拒否されることを保証する。
 #[test]
 fn scenario6_rejects_billing_after_stop() {
   assert_rejects_after_stop::<ModelASession, _>("model-a");
   assert_rejects_after_stop::<ModelBSession, _>("model-b");
 }
 
+/// エネルギーに負値を与えた場合、スナップショット・停止ともにエラー扱いとなることを検証する。
 #[test]
 fn scenario9_negative_energy_is_rejected() {
   assert_negative_energy_rejected::<ModelASession, _>("model-a");
   assert_negative_energy_rejected::<ModelBSession, _>("model-b");
 }
 
+/// 停止時刻が開始時刻以前であるような逆転タイムラインを入力すると、課金処理が不正入力として拒否されることを確認する。
 #[test]
 fn scenario10_invalid_timeline_is_rejected() {
   assert_invalid_timeline_rejected::<ModelASession, _>("model-a");
   assert_invalid_timeline_rejected::<ModelBSession, _>("model-b");
 }
 
+/// 同じ単価・時間・エネルギーを繰り返し渡しても結果が変わらない決定性を検証する。
 #[test]
 fn scenario11_same_input_same_result() {
   assert_deterministic::<ModelASession, _>("model-a");
   assert_deterministic::<ModelBSession, _>("model-b");
 }
 
+/// 端数が発生するケースで常に切り捨て計算が行われ、利用時間が長い方が安くならないことを確認する。
 #[test]
 fn scenario12_rounding_is_floor_and_monotonic() {
   let short_case = StopCase {
@@ -183,12 +190,14 @@ fn scenario12_rounding_is_floor_and_monotonic() {
   assert!(long_b.amount_yen >= short_b.amount_yen);
 }
 
+/// 単価とエネルギーの組み合わせで請求額が100万円を超える場合、課金と停止のどちらでも拒否されることを検証する。
 #[test]
 fn scenario14_amount_over_limit_is_rejected() {
   assert_amount_over_limit_rejected::<ModelASession, _>("model-a");
   assert_amount_over_limit_rejected::<ModelBSession, _>("model-b");
 }
 
+/// 総エネルギーが1,000,000ミリkWhの上限を超えると、スナップショットと停止の両方でエラーになることを検証する。
 #[test]
 fn scenario15_energy_over_limit_is_rejected() {
   assert_energy_over_limit_rejected::<ModelASession, _>("model-a");
