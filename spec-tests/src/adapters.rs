@@ -200,6 +200,9 @@ impl ClosedBillingSession for ClosedModelBSession {
 ///
 /// # Errors
 /// タイムスタンプが許容範囲外の場合、`ModelBError::TimestampOutOfRange` を返します。
+///
+/// # Returns
+/// 変換された `OffsetDateTime`。
 fn ms_to_offset_datetime(epoch_ms: i64) -> Result<OffsetDateTime, ModelBError> {
   let seconds = epoch_ms.div_euclid(1_000);
   let millis = epoch_ms.rem_euclid(1_000);

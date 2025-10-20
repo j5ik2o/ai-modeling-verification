@@ -9,6 +9,9 @@ pub struct KwhMilli(pub(super) u64);
 impl KwhMilli {
   /// 0 以上かつ上限 `MAX_KWH_MILLI` 以下のエネルギー量（ミリkWh）を生成する。
   ///
+  /// # Returns
+  /// 妥当なエネルギー量を `Ok` で返します。
+  ///
   /// # Errors
   /// 上限を超える値が渡された場合、`SessionValueError::EnergyOutOfRange` を返します。
   pub fn new(value: u64) -> Result<Self, SessionValueError> {
@@ -23,6 +26,9 @@ impl KwhMilli {
   }
 
   /// エネルギー量 0 を表す定数生成を行う。
+  ///
+  /// # Returns
+  /// 0 を表す `KwhMilli`。
   pub fn zero() -> Self {
     Self(0)
   }
@@ -35,6 +41,9 @@ impl KwhMilli {
   ///
   /// # Errors
   /// 負の値、または上限を超える値が渡された場合は `SessionValueError` を返します。
+  ///
+  /// # Returns
+  /// 妥当なエネルギー量を `Ok` で返します。
   pub fn try_from_i64(value: i64) -> Result<Self, SessionValueError> {
     if value < 0 {
       return Err(SessionValueError::NegativeEnergy { provided: value });

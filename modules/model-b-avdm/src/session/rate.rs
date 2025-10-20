@@ -9,6 +9,9 @@ pub struct RateYenPerKwh(pub(super) u32);
 impl RateYenPerKwh {
   /// 単価を生成する。
   ///
+  /// # Returns
+  /// 妥当な単価を `Ok` で返します。
+  ///
   /// # Errors
   /// 0 以下の値が指定された場合、`SessionValueError::NonPositiveRate` を返します。
   pub fn new(value: u32) -> Result<Self, SessionValueError> {
@@ -23,6 +26,9 @@ impl RateYenPerKwh {
   ///
   /// # Errors
   /// 算出結果が金額上限を超えた場合、`SessionValueError::AmountOutOfRange` を返します。
+  ///
+  /// # Returns
+  /// 金額オブジェクトを `Ok` で返します。
   pub fn charge(self, billed_energy: KwhMilli) -> Result<MoneyYen, SessionValueError> {
     let billed_energy_milli = billed_energy.into_u128_milli();
     let rate_per_kwh = u32::from(self) as u128;

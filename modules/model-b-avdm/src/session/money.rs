@@ -10,6 +10,9 @@ impl MoneyYen {
   /// 0円以上 `MAX_YEN` 以下の金額を表す値オブジェクトを生成する。
   /// 日常的な課金規模を想定し、1,000,000 円（100万円）までを妥当範囲とする。
   ///
+  /// # Returns
+  /// 妥当な金額を `Ok` で返します。
+  ///
   /// # Errors
   /// 上限を超える金額が渡された場合、`SessionValueError::AmountOutOfRange` を返します。
   pub fn new(value: u64) -> Result<Self, SessionValueError> {
@@ -27,6 +30,9 @@ impl MoneyYen {
   ///
   /// # Errors
   /// 上限を超える値、または `u64` に収まらない場合は `SessionValueError` を返します。
+  ///
+  /// # Returns
+  /// 妥当な金額を `Ok` で返します。
   pub(crate) fn try_from_u128(value: u128) -> Result<Self, SessionValueError> {
     if value > MAX_YEN as u128 {
       Err(SessionValueError::AmountOutOfRange {

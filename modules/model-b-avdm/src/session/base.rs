@@ -38,6 +38,9 @@ pub enum Session {
 
 impl Session {
   /// アクティブ状態のセッションを生成する。
+  ///
+  /// # Returns
+  /// アクティブ状態の `Session` を返します。
   pub fn new_active(id: SessionId, started_at: OffsetDateTime, rate: RateYenPerKwh) -> Self {
     Session::Active {
       id,
@@ -47,6 +50,9 @@ impl Session {
   }
 
   /// セッションIDを取得する。
+  ///
+  /// # Returns
+  /// セッション識別子。
   pub fn id(&self) -> SessionId {
     match self {
       Session::Active { id, .. } | Session::Closed { id, .. } => *id,
@@ -54,6 +60,9 @@ impl Session {
   }
 
   /// セッション開始時刻を取得する。
+  ///
+  /// # Returns
+  /// 開始時刻。
   pub fn started_at(&self) -> OffsetDateTime {
     match self {
       Session::Active { started_at, .. } | Session::Closed { started_at, .. } => *started_at,
@@ -61,6 +70,9 @@ impl Session {
   }
 
   /// セッション終了時刻を取得する（アクティブ時は `None`）。
+  ///
+  /// # Returns
+  /// 終了時刻、またはアクティブ時は `None`。
   pub fn ended_at(&self) -> Option<OffsetDateTime> {
     match self {
       Session::Active { .. } => None,
@@ -69,6 +81,9 @@ impl Session {
   }
 
   /// セッション単価を取得する。
+  ///
+  /// # Returns
+  /// 単価。
   pub fn rate(&self) -> RateYenPerKwh {
     match self {
       Session::Active { rate, .. } | Session::Closed { rate, .. } => *rate,
@@ -76,6 +91,9 @@ impl Session {
   }
 
   /// セッション全体のエネルギー量を取得する（アクティブ時は `None`）。
+  ///
+  /// # Returns
+  /// エネルギー量、またはアクティブ時は `None`。
   pub fn total_energy(&self) -> Option<KwhMilli> {
     match self {
       Session::Active { .. } => None,
@@ -84,6 +102,9 @@ impl Session {
   }
 
   /// 課金対象エネルギー量を取得する（アクティブ時は `None`）。
+  ///
+  /// # Returns
+  /// 課金対象エネルギー量、またはアクティブ時は `None`。
   pub fn billed_energy(&self) -> Option<KwhMilli> {
     match self {
       Session::Active { .. } => None,
@@ -92,6 +113,9 @@ impl Session {
   }
 
   /// 請求金額を取得する（アクティブ時は `None`）。
+  ///
+  /// # Returns
+  /// 請求金額、またはアクティブ時は `None`。
   pub fn charged_amount(&self) -> Option<MoneyYen> {
     match self {
       Session::Active { .. } => None,
@@ -100,6 +124,9 @@ impl Session {
   }
 
   /// セッションを停止し、請求を確定させる。
+  ///
+  /// # Returns
+  /// 停止後の `Session::Closed` を返します。
   ///
   /// # Errors
   /// - 既に停止済みのセッションに対して呼び出した場合。
@@ -133,6 +160,9 @@ impl Session {
 
   /// 指定時点での課金スナップショットを取得する。
   ///
+  /// # Returns
+  /// 課金対象エネルギー量と金額のタプル。
+  ///
   /// # Errors
   /// - アクティブ状態でタイムラインが不正な場合。
   /// - 停止済みだが異なる条件で計算しようとした場合。
@@ -163,6 +193,9 @@ impl Session {
   }
 
   /// 停止後の追加課金要求に応答する。
+  ///
+  /// # Returns
+  /// 成功時は課金対象エネルギー量と金額のタプル。
   ///
   /// # Errors
   /// 停止済みセッションに課金しようとした場合は常に `SessionValueError::AlreadyClosed` を返します。

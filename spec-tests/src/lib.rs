@@ -20,6 +20,9 @@ impl BillingResult {
   ///
   /// # Errors
   /// 本関数は失敗しません。
+  ///
+  /// # Returns
+  /// `BillingResult` を返します。
   pub fn from_model_b(
     energy: model_b_avdm::session::KwhMilli,
     amount: model_b_avdm::session::MoneyYen,
