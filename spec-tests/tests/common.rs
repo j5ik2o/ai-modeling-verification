@@ -1,19 +1,18 @@
-use spec_tests::adapters::{ModelASession, ModelBSession};
 use spec_tests::{BillingResult, BillingSession, ClosedBillingSession};
 
-const BASE_START_MS: i64 = 0;
-const MINUTE_MS: i64 = 60 * 1_000;
-const MAX_KWH_MILLI: i64 = 1_000_000;
+pub const BASE_START_MS: i64 = 0;
+pub const MINUTE_MS: i64 = 60 * 1_000;
+pub const MAX_KWH_MILLI: i64 = 1_000_000;
 
-struct StopCase {
-  name: &'static str,
-  duration_minutes: i64,
-  energy_milli: i64,
-  rate_yen_per_kwh: u32,
-  expected: BillingResult,
+pub struct StopCase {
+  pub name: &'static str,
+  pub duration_minutes: i64,
+  pub energy_milli: i64,
+  pub rate_yen_per_kwh: u32,
+  pub expected: BillingResult,
 }
 
-const STOP_CASES: &[StopCase] = &[
+pub const STOP_CASES: &[StopCase] = &[
   StopCase {
     name: "scenario1_six_minutes",
     duration_minutes: 6,
@@ -86,125 +85,7 @@ const STOP_CASES: &[StopCase] = &[
   },
 ];
 
-/// 開始から5分無料・ゼロエネルギー・長時間利用・最大課金額境界など代表的な停止ケースで、課金結果が期待通りになることを確認する。
-#[test]
-fn stop_scenarios_match_expected() {
-  for case in STOP_CASES {
-    assert_stop_case::<ModelASession, _>("model-a", case);
-    assert_stop_case::<ModelBSession, _>("model-b", case);
-  }
-}
-
-/// 進行中に複数回スナップショット課金を行っても、無料5分以降は金額が単調増加し、途中計算に矛盾が生じないことを確認する。
-#[test]
-fn scenario5_progressive_billing_is_monotonic() {
-  let snapshots = [
-    (
-      3,
-      1_200,
-      BillingResult {
-        billed_energy_milli: 0,
-        amount_yen: 0,
-      },
-    ),
-    (
-      6,
-      2_400,
-      BillingResult {
-        billed_energy_milli: 400,
-        amount_yen: 20,
-      },
-    ),
-    (
-      10,
-      4_000,
-      BillingResult {
-        billed_energy_milli: 2_000,
-        amount_yen: 100,
-      },
-    ),
-  ];
-
-  assert_snapshots::<ModelASession, _>("model-a", 50, &snapshots);
-  assert_snapshots::<ModelBSession, _>("model-b", 50, &snapshots);
-}
-
-/// セッションを停止した後に課金しようとすると、両モデルとも「停止済み」として拒否されることを保証する。
-#[test]
-fn scenario6_rejects_billing_after_stop() {
-  assert_rejects_after_stop::<ModelASession, _>("model-a");
-  assert_rejects_after_stop::<ModelBSession, _>("model-b");
-}
-
-/// エネルギーに負値を与えた場合、スナップショット・停止ともにエラー扱いとなることを検証する。
-#[test]
-fn scenario9_negative_energy_is_rejected() {
-  assert_negative_energy_rejected::<ModelASession, _>("model-a");
-  assert_negative_energy_rejected::<ModelBSession, _>("model-b");
-}
-
-/// 停止時刻が開始時刻以前であるような逆転タイムラインを入力すると、課金処理が不正入力として拒否されることを確認する。
-#[test]
-fn scenario10_invalid_timeline_is_rejected() {
-  assert_invalid_timeline_rejected::<ModelASession, _>("model-a");
-  assert_invalid_timeline_rejected::<ModelBSession, _>("model-b");
-}
-
-/// 同じ単価・時間・エネルギーを繰り返し渡しても結果が変わらない決定性を検証する。
-#[test]
-fn scenario11_same_input_same_result() {
-  assert_deterministic::<ModelASession, _>("model-a");
-  assert_deterministic::<ModelBSession, _>("model-b");
-}
-
-/// 端数が発生するケースで常に切り捨て計算が行われ、利用時間が長い方が安くならないことを確認する。
-#[test]
-fn scenario12_rounding_is_floor_and_monotonic() {
-  let short_case = StopCase {
-    name: "short_usage",
-    duration_minutes: 7,
-    energy_milli: 1_250,
-    rate_yen_per_kwh: 33,
-    expected: BillingResult {
-      billed_energy_milli: 357,
-      amount_yen: 11,
-    },
-  };
-  let long_case = StopCase {
-    name: "long_usage",
-    duration_minutes: 12,
-    energy_milli: 2_142,
-    rate_yen_per_kwh: 33,
-    expected: BillingResult {
-      billed_energy_milli: 1_249,
-      amount_yen: 41,
-    },
-  };
-
-  let short_a = assert_stop_case::<ModelASession, _>("model-a", &short_case);
-  let long_a = assert_stop_case::<ModelASession, _>("model-a", &long_case);
-  assert!(long_a.amount_yen >= short_a.amount_yen);
-
-  let short_b = assert_stop_case::<ModelBSession, _>("model-b", &short_case);
-  let long_b = assert_stop_case::<ModelBSession, _>("model-b", &long_case);
-  assert!(long_b.amount_yen >= short_b.amount_yen);
-}
-
-/// 単価とエネルギーの組み合わせで請求額が100万円を超える場合、課金と停止のどちらでも拒否されることを検証する。
-#[test]
-fn scenario14_amount_over_limit_is_rejected() {
-  assert_amount_over_limit_rejected::<ModelASession, _>("model-a");
-  assert_amount_over_limit_rejected::<ModelBSession, _>("model-b");
-}
-
-/// 総エネルギーが1,000,000ミリkWhの上限を超えると、スナップショットと停止の両方でエラーになることを検証する。
-#[test]
-fn scenario15_energy_over_limit_is_rejected() {
-  assert_energy_over_limit_rejected::<ModelASession, _>("model-a");
-  assert_energy_over_limit_rejected::<ModelBSession, _>("model-b");
-}
-
-fn assert_amount_over_limit_rejected<S, E>(model_name: &str)
+pub fn assert_amount_over_limit_rejected<S, E>(model_name: &str)
 where
   S: BillingSession<Error = E>,
   S::ClosedSession: ClosedBillingSession<Error = E>,
@@ -230,7 +111,7 @@ where
   );
 }
 
-fn assert_energy_over_limit_rejected<S, E>(model_name: &str)
+pub fn assert_energy_over_limit_rejected<S, E>(model_name: &str)
 where
   S: BillingSession<Error = E>,
   S::ClosedSession: ClosedBillingSession<Error = E>,
@@ -253,7 +134,7 @@ where
   );
 }
 
-fn assert_stop_case<S, E>(model_name: &str, case: &StopCase) -> BillingResult
+pub fn assert_stop_case<S, E>(model_name: &str, case: &StopCase) -> BillingResult
 where
   S: BillingSession<Error = E>,
   S::ClosedSession: ClosedBillingSession<Error = E>,
@@ -277,7 +158,7 @@ where
   result
 }
 
-fn assert_snapshots<S, E>(model_name: &str, rate: u32, snapshots: &[(i64, i64, BillingResult)])
+pub fn assert_snapshots<S, E>(model_name: &str, rate: u32, snapshots: &[(i64, i64, BillingResult)])
 where
   S: BillingSession<Error = E>,
   S::ClosedSession: ClosedBillingSession<Error = E>,
@@ -306,7 +187,7 @@ where
   }
 }
 
-fn assert_rejects_after_stop<S, E>(model_name: &str)
+pub fn assert_rejects_after_stop<S, E>(model_name: &str)
 where
   S: BillingSession<Error = E>,
   S::ClosedSession: ClosedBillingSession<Error = E>,
@@ -326,7 +207,7 @@ where
   );
 }
 
-fn assert_negative_energy_rejected<S, E>(model_name: &str)
+pub fn assert_negative_energy_rejected<S, E>(model_name: &str)
 where
   S: BillingSession<Error = E>,
   S::ClosedSession: ClosedBillingSession<Error = E>,
@@ -349,7 +230,7 @@ where
   );
 }
 
-fn assert_invalid_timeline_rejected<S, E>(model_name: &str)
+pub fn assert_invalid_timeline_rejected<S, E>(model_name: &str)
 where
   S: BillingSession<Error = E>,
   S::ClosedSession: ClosedBillingSession<Error = E>,
@@ -372,7 +253,7 @@ where
   );
 }
 
-fn assert_deterministic<S, E>(model_name: &str)
+pub fn assert_deterministic<S, E>(model_name: &str)
 where
   S: BillingSession<Error = E>,
   S::ClosedSession: ClosedBillingSession<Error = E>,
@@ -394,6 +275,6 @@ where
   assert_eq!(first, second, "{} must be deterministic", model_name);
 }
 
-fn end_timestamp(duration_minutes: i64) -> i64 {
+pub fn end_timestamp(duration_minutes: i64) -> i64 {
   BASE_START_MS + duration_minutes * MINUTE_MS
 }
