@@ -13,7 +13,7 @@ description = "modules/model-b-avdm/src/session/base.rs をリセットする"
 command = "./scripts/model-b-code-reset.sh"
 workspace = false
 
-[tasks.all-code-rest]
+[tasks.all-code-reset]
 description = "model-a と model-b のコードを todo!(\"AIに実装させる\") にリセットする"
 dependencies = ["model-a-code-reset", "model-b-code-reset"]
 workspace = false
