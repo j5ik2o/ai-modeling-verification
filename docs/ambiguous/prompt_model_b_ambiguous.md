@@ -1,8 +1,8 @@
-# Model A (Non-AVDM) 実装プロンプト - 不明確版
+# Model B (AVDM) 実装プロンプト - あいまい版
 
 > **実験日時**: [実施時に記録]
 > **実験者**: [実施者名]
-> **Claude Codeセッション**: 新規セッション（Model B実装とは完全に独立）
+> **Claude Codeセッション**: 新規セッション（Model A実装とは完全に独立）
 
 ---
 
@@ -11,11 +11,11 @@
 **以下のルールを厳守してください：**
 
 - ❌ **gitコマンドは一切操作しないでください**
-- ✅ **modules/model-a-non-avdm/ のみを編集してください**
-- ❌ **modules/model-b-avdm/ は絶対に見ないでください**（別の実装アプローチです）
+- ✅ **modules/model-b-avdm/ のみを編集してください**
+- ❌ **modules/model-a-non-avdm/ は絶対に見ないでください**（別の実装アプローチです）
 - ❌ **spec-tests/ は絶対に見ないでください**（後で実行するテストケース、正解が書いてあります）
 - ✅ **spec.md は参照OKです**（仕様書として公開されている情報）
-- ✅ **modules/model-a-non-avdm/ 内のコードは自由に参照してください**
+- ✅ **modules/model-b-avdm/ 内のコードは自由に参照してください**
 
 ---
 
@@ -23,18 +23,29 @@
 
 あなたは充電セッションの課金ロジックを実装するRustエンジニアです。
 
-既存の`Session`構造体に対して課金計算メソッドを実装してください。
+既存の`Session` enum/構造体に対して課金計算メソッドを実装してください。
+ドメインモデルの型定義は既に存在するので、それらを活用してください。
 
 ---
 
 ## 🎯 実装タスク
 
-`modules/model-a-non-avdm/src/session.rs` の `calculate_charge()` 関数を実装してください。
+`modules/model-b-avdm/src/session/base.rs` の `Session` 実装メソッドを完成させてください。
 
-現在の状態：
+現在の状態（以下のメソッドが未実装）：
 ```rust
-pub fn calculate_charge(session: &mut Session) -> Result<u32, String> {
-  todo!("AIに実装させる")
+impl Session {
+  pub fn stop(...) -> Result<Self, SessionValueError> {
+    todo!("AIに実装させる")
+  }
+
+  pub fn bill_snapshot(...) -> Result<(KwhMilli, MoneyYen), SessionValueError> {
+    todo!("AIに実装させる")
+  }
+
+  pub fn bill_after_stop(...) -> Result<(KwhMilli, MoneyYen), SessionValueError> {
+    todo!("AIに実装させる")
+  }
 }
 ```
 
@@ -89,7 +100,8 @@ EV充電セッションの課金処理を仕上げたいです。以下のよう
 
 - 細かい条件は明文化しきれませんが、後から追加で境界ケースを突っ込まれても破綻しない造りとテストをお願いします
 - そのへんは常識的に整えておいてください
-- 既存のコード（`modules/model-a-non-avdm/` 内）を参考にして、プロジェクトの慣習に従ってください
+- 既存のコード（`modules/model-b-avdm/` 内）を参考にして、プロジェクトの慣習に従ってください
+- **既存のドメインモデル型（値オブジェクト等）を積極的に活用してください**
 
 ---
 
@@ -121,10 +133,10 @@ EV充電セッションの課金処理を仕上げたいです。以下のよう
 
 - **テスト実行結果**（ユニットテスト）:
   ```bash
-  cargo test -p model-a-non-avdm
+  cargo test -p model-b-avdm
   ```
 
 ### 制約遵守チェック
-- [ ] modules/model-b-avdm/ を参照していない
+- [ ] modules/model-a-non-avdm/ を参照していない
 - [ ] spec-tests/ を参照していない
-- [ ] modules/model-a-non-avdm/ のみ編集している
+- [ ] modules/model-b-avdm/ のみ編集している
