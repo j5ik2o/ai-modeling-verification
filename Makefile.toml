@@ -2,3 +2,13 @@
 description = "Run cargo clippy for all workspace targets with warnings as errors"
 command = "cargo"
 args = ["clippy", "--workspace", "--all-targets", "--", "-D", "warnings"]
+
+[tasks.model-a-code-reset]
+description = "modules/model-a-non-avdm/src/session.rs をリセットする"
+command = "./scripts/model-a-code-reset.sh"
+workspace = false
+
+[tasks.model-b-code-reset]
+description = "modules/model-b-avdm/src/session/base.rs をリセットする"
+command = "./scripts/model-b-code-reset.sh"
+workspace = false
