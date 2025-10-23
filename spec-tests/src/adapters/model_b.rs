@@ -46,8 +46,8 @@ impl BillingSession for ModelBSession {
     }
     let energy = KwhMilli::try_from_i64(energy_milli)?;
     let ended_at = ms_to_offset_datetime(end_epoch_ms)?;
-    let (billed, amount) = self.inner.bill_snapshot(ended_at, energy)?;
-    Ok(BillingResult::from_model_b(billed, amount))
+    let bill = self.inner.bill_snapshot(ended_at, energy)?;
+    Ok(BillingResult::from_model_b(bill.billable_energy(), bill.amount_due()))
   }
 
   fn stop(self, end_epoch_ms: i64, energy_milli: i64) -> Result<(BillingResult, Self::ClosedSession), Self::Error> {
@@ -57,9 +57,10 @@ impl BillingSession for ModelBSession {
     let energy = KwhMilli::try_from_i64(energy_milli)?;
     let ended_at = ms_to_offset_datetime(end_epoch_ms)?;
     let session = self.inner.stop(ended_at, energy)?;
-    let billed = session.billed_energy().expect("closed session must have billed energy");
-    let amount = session.charged_amount().expect("closed session must have charged amount");
-    let result = BillingResult::from_model_b(billed, amount);
+    let result = match &session {
+      | Session::Closed { bill, .. } => BillingResult::from_model_b(bill.billable_energy(), bill.amount_due()),
+      | Session::Active { .. } => panic!("expected closed session"),
+    };
     Ok((result, ClosedModelBSession::new(session)))
   }
 }
@@ -72,10 +73,9 @@ pub struct ClosedModelBSession {
 
 impl ClosedModelBSession {
   fn new(inner: Session) -> Self {
-    if inner.billed_energy().is_some() {
-      Self { inner }
-    } else {
-      panic!("expected closed session");
+    match inner {
+      | Session::Closed { .. } => Self { inner },
+      | Session::Active { .. } => panic!("expected closed session"),
     }
   }
 }
@@ -84,7 +84,10 @@ impl ClosedBillingSession for ClosedModelBSession {
   type Error = ModelBError;
 
   fn bill_after_stop(&self, _end_epoch_ms: i64, _energy_milli: i64) -> Result<BillingResult, Self::Error> {
-    Err(ModelBError::Domain(SessionValueError::AlreadyClosed { session_id: self.inner.id() }))
+    match &self.inner {
+      | Session::Closed { id, .. } => Err(ModelBError::Domain(SessionValueError::AlreadyClosed { session_id: *id })),
+      | Session::Active { .. } => panic!("closed session wrapper must hold a closed session"),
+    }
   }
 }
 

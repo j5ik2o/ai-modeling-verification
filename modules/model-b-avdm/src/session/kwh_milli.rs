@@ -54,6 +54,12 @@ impl KwhMilli {
   pub(crate) fn into_u128_milli(self) -> u128 {
     self.0 as u128
   }
+
+  /// 上限を考慮した加算を行う。
+  pub fn bounded_sum(self, other: Self) -> Result<Self, SessionValueError> {
+    let total = self.0.saturating_add(other.0);
+    Self::try_new(total)
+  }
 }
 
 impl TryFrom<u64> for KwhMilli {

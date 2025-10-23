@@ -1,4 +1,4 @@
-use super::{errors::SessionValueError, kwh_milli::KwhMilli};
+use super::{chargeable_window::ChargeableWindow, errors::SessionValueError, kwh_milli::KwhMilli};
 
 /// 課金対象となるエネルギー量を表現する値オブジェクト。
 ///
@@ -11,6 +11,12 @@ pub struct ChargeableEnergy {
 }
 
 impl ChargeableEnergy {
+  /// 無課金を明示する。
+  #[must_use]
+  pub fn free(total: KwhMilli) -> Self {
+    Self { total, billed: KwhMilli::zero() }
+  }
+
   /// 総エネルギーと課金対象エネルギーのペアを生成する。
   ///
   /// # Errors
@@ -23,36 +29,27 @@ impl ChargeableEnergy {
     Ok(Self { total, billed })
   }
 
-  /// 無料時間を差し引いた経過時間に基づいて課金対象エネルギーを算出する。
-  ///
-  /// 与えられた時間はミリ秒単位で解釈され、丸めは常に床となります。
-  pub fn from_chargeable_window(
-    total_energy: KwhMilli,
-    chargeable_millis: u128,
-    total_millis: u128,
-  ) -> Result<Self, SessionValueError> {
-    if total_millis == 0 {
-      return Self::new(total_energy, KwhMilli::zero());
-    }
+  /// 課金窓に基づきエネルギーを割り当てる。
+  pub fn allocate(total_energy: KwhMilli, window: ChargeableWindow) -> Result<Self, SessionValueError> {
+    window.allocate_energy(total_energy)
+  }
 
-    let effective_chargeable = chargeable_millis.min(total_millis);
-    if effective_chargeable == 0 {
-      return Self::new(total_energy, KwhMilli::zero());
-    }
-
-    let total_energy_milli = total_energy.into_u128_milli();
-    let billed_milli = (total_energy_milli * effective_chargeable) / total_millis;
-    let billed = KwhMilli::from_milli(billed_milli as u64);
-    Self::new(total_energy, billed)
+  /// 課金対象エネルギー同士を合成する。
+  pub fn combine(self, other: Self) -> Result<Self, SessionValueError> {
+    let total = self.total.bounded_sum(other.total)?;
+    let billed = self.billed.bounded_sum(other.billed)?;
+    Self::new(total, billed)
   }
 
   /// 課金対象エネルギー量を返す。
-  pub fn billed(self) -> KwhMilli {
+  #[must_use]
+  pub fn billable(self) -> KwhMilli {
     self.billed
   }
 
   /// セッションの総エネルギー量を返す。
-  pub fn total(self) -> KwhMilli {
+  #[must_use]
+  pub fn total_consumed(self) -> KwhMilli {
     self.total
   }
 }

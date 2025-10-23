@@ -51,4 +51,12 @@ pub enum SessionValueError {
     /// 許容上限。
     max:      u64,
   },
+  /// 課金窓比率が不正だった。
+  #[error("課金比率が不正です (分子: {numerator}, 分母: {denominator})")]
+  InvalidChargeRatio {
+    /// 比率の分子。
+    numerator:   u128,
+    /// 比率の分母。
+    denominator: u128,
+  },
 }

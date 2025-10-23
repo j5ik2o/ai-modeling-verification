@@ -31,7 +31,7 @@ impl RateYenPerKwh {
   ///
   /// # Returns
   /// 金額オブジェクトを `Ok` で返します。
-  pub fn charge(self, billed_energy: KwhMilli) -> Result<MoneyYen, SessionValueError> {
+  pub fn quote_for(self, billed_energy: KwhMilli) -> Result<MoneyYen, SessionValueError> {
     let billed_energy_milli = billed_energy.into_u128_milli();
     let rate_per_kwh = self.0.get() as u128;
     let amount = (billed_energy_milli * rate_per_kwh) / 1_000;

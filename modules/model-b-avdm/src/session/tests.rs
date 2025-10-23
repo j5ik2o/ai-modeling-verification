@@ -25,16 +25,15 @@ fn calculates_bill_with_free_grace_period() {
   let total_energy = energy(30_000);
   let ended_at = started_at + Duration::minutes(30);
 
-  let (billed_energy, charged_amount) = session.bill_snapshot(ended_at, total_energy).expect("snapshot succeeds");
-
-  assert_eq!(billed_energy, energy(25_000));
-  assert_eq!(charged_amount, yen(1_000));
+  let bill = session.bill_snapshot(ended_at, total_energy).expect("snapshot succeeds");
+  assert_eq!(bill.billable_energy(), energy(25_000));
+  assert_eq!(bill.amount_due(), yen(1_000));
 
   let closed = session.stop(ended_at, total_energy).expect("stop succeeds");
   match closed {
-    | Session::Closed { billed_energy, charged_amount, .. } => {
-      assert_eq!(billed_energy, energy(25_000));
-      assert_eq!(charged_amount, yen(1_000));
+    | Session::Closed { bill, .. } => {
+      assert_eq!(bill.billable_energy(), energy(25_000));
+      assert_eq!(bill.amount_due(), yen(1_000));
     },
     | _ => panic!("expected closed session"),
   }
@@ -46,14 +45,18 @@ fn zero_energy_session_is_free() {
   let total_energy = energy(0);
   let ended_at = started_at + Duration::minutes(20);
 
-  let (billed_energy, charged_amount) = session.bill_snapshot(ended_at, total_energy).expect("snapshot succeeds");
-
-  assert_eq!(billed_energy, KwhMilli::zero());
-  assert_eq!(charged_amount, yen(0));
+  let bill = session.bill_snapshot(ended_at, total_energy).expect("snapshot succeeds");
+  assert_eq!(bill.billable_energy(), KwhMilli::zero());
+  assert_eq!(bill.amount_due(), yen(0));
 
   let closed = session.stop(ended_at, total_energy).expect("stop succeeds");
-  assert_eq!(closed.billed_energy(), Some(KwhMilli::zero()));
-  assert_eq!(closed.charged_amount(), Some(yen(0)));
+  match closed {
+    | Session::Closed { bill, .. } => {
+      assert_eq!(bill.billable_energy(), KwhMilli::zero());
+      assert_eq!(bill.amount_due(), yen(0));
+    },
+    | _ => panic!("expected closed session"),
+  }
 }
 
 #[test]
@@ -62,10 +65,9 @@ fn exact_free_window_results_in_no_charge() {
   let total_energy = energy(10_000);
   let ended_at = started_at + Duration::minutes(super::FREE_MINUTES as i64);
 
-  let (billed_energy, charged_amount) = session.bill_snapshot(ended_at, total_energy).expect("snapshot succeeds");
-
-  assert_eq!(billed_energy, KwhMilli::zero());
-  assert_eq!(charged_amount, yen(0));
+  let bill = session.bill_snapshot(ended_at, total_energy).expect("snapshot succeeds");
+  assert_eq!(bill.billable_energy(), KwhMilli::zero());
+  assert_eq!(bill.amount_due(), yen(0));
 }
 
 #[test]
@@ -74,10 +76,9 @@ fn just_beyond_free_window_rounds_down() {
   let total_energy = energy(6_000);
   let ended_at = started_at + Duration::minutes(super::FREE_MINUTES as i64) + Duration::seconds(1);
 
-  let (billed_energy, charged_amount) = session.bill_snapshot(ended_at, total_energy).expect("snapshot succeeds");
-
-  assert_eq!(billed_energy, energy(19));
-  assert_eq!(charged_amount, yen(1));
+  let bill = session.bill_snapshot(ended_at, total_energy).expect("snapshot succeeds");
+  assert_eq!(bill.billable_energy(), energy(19));
+  assert_eq!(bill.amount_due(), yen(1));
 }
 
 #[test]

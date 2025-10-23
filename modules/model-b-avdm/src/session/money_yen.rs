@@ -13,6 +13,12 @@ impl MoneyYen {
     Self(value.get())
   }
 
+  /// 0 円を生成する。
+  #[must_use]
+  pub fn zero() -> Self {
+    Self(0)
+  }
+
   /// 生の値から金額を生成する。
   ///
   /// # Errors
@@ -39,6 +45,32 @@ impl MoneyYen {
         .ok_or(SessionValueError::AmountOutOfRange { provided: value_u64, max: MAX_YEN })?;
       Ok(Self::new(bounded))
     }
+  }
+
+  /// 加算を行う。
+  pub fn add(self, other: Self) -> Result<Self, SessionValueError> {
+    let sum = self
+      .0
+      .checked_add(other.0)
+      .ok_or(SessionValueError::AmountOverflow { provided: (self.0 as u128) + (other.0 as u128) })?;
+    Self::try_new(sum)
+  }
+
+  /// 上限チェック付きの加算を行う。
+  pub fn saturating_add(self, other: Self) -> Result<Self, SessionValueError> {
+    self.add(other)
+  }
+
+  /// 金額が正かどうかを判定する。
+  #[must_use]
+  pub fn is_positive(self) -> bool {
+    self.0 > 0
+  }
+
+  /// 金額がゼロかどうかを判定する。
+  #[must_use]
+  pub fn is_zero(self) -> bool {
+    self.0 == 0
   }
 }
 
