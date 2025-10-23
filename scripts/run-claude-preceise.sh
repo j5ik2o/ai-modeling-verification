@@ -36,6 +36,6 @@ fi
 
 claude \
   --permission-mode acceptEdits \
-  --output-format text \
+  --output-format stream-json \
   --verbose \
   -p "$(cat "${PROMPT_FILE}")"

@@ -4,13 +4,15 @@ set -euo pipefail
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd "${script_dir}/.." && pwd)"
 target="${repo_root}/modules/model-b-avdm/src/session/base.rs"
+tests_path="${repo_root}/modules/model-b-avdm/src/session/tests.rs"
 
-python3 - "$target" <<'PY'
+python3 - "$target" "$tests_path" <<'PY'
 import sys
 import re
 from pathlib import Path
 
 path = Path(sys.argv[1])
+tests_path = Path(sys.argv[2])
 text = path.read_text(encoding="utf-8")
 
 DOC_LINES = {
@@ -185,9 +187,21 @@ def remove_private_fn(source: str, name: str) -> str:
 for fn_name in ("bill_snapshot_for", "billed_energy_for", "duration_millis"):
     current = remove_private_fn(current, fn_name)
 
+tests_cleared = False
+if tests_path.exists():
+    if tests_path.read_text(encoding="utf-8") != "":
+        tests_path.write_text("", encoding="utf-8")
+        tests_cleared = True
+
 if current != text:
     path.write_text(current, encoding="utf-8")
-    print(f"{path} の公開メソッドを todo!(\"AIに実装させる\") へリセットし、プライベート関数を削除しました")
+    if tests_cleared:
+        print(f"{path} をリセットし、{tests_path} を空にしました")
+    else:
+        print(f"{path} の公開メソッドを todo!(\"AIに実装させる\") へリセットし、プライベート関数を削除しました")
 else:
-    print(f"{path} は既に指定された状態です")
+    if tests_cleared:
+        print(f"{path} は既に指定された状態でしたが、{tests_path} を空にしました")
+    else:
+        print(f"{path} は既に指定された状態です")
 PY

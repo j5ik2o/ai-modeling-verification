@@ -76,10 +76,44 @@ def reset_function_body(source: str, name: str) -> str:
     return source[: brace_start + 1] + stub + source[end_idx:]
 
 
+def remove_tests_module(source: str) -> str:
+    marker = "#[cfg(test)]"
+    idx = source.find(marker)
+    if idx == -1:
+        return source
+
+    mod_idx = source.find("mod tests", idx)
+    if mod_idx == -1:
+        return source
+
+    brace_start = source.find("{", mod_idx)
+    if brace_start == -1:
+        return source
+
+    depth = 0
+    end_idx = None
+    for pos in range(brace_start, len(source)):
+        ch = source[pos]
+        if ch == "{":
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0:
+                end_idx = pos
+                break
+
+    if end_idx is None:
+        return source
+
+    return source[:idx] + source[end_idx + 1 :]
+
+
 updated = reset_function_body(text, "calculate_charge")
+updated = remove_tests_module(updated)
+
 if updated != text:
     path.write_text(updated, encoding="utf-8")
-    print(f"{path} を todo!(\"AIに実装させる\") にリセットしました")
+    print(f"{path} を初期状態にリセットしました")
 else:
-    print(f"{path} は既に todo!(\"AIに実装させる\") です")
+    print(f"{path} は既に初期状態です")
 PY
