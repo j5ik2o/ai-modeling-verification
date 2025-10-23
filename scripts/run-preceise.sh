@@ -12,7 +12,7 @@ case "${PROMPT_KEY}" in
     RESET_SCRIPT="${SCRIPT_DIR}/model-a-code-reset.sh"
     ;;
   model-b|b)
-    PROMPT_FILE="${ROOT_DIR}/docs/docs/precise/prompt_model_b_precise.md"
+    PROMPT_FILE="${ROOT_DIR}/docs/precise/prompt_model_b_precise.md"
     RESET_SCRIPT="${SCRIPT_DIR}/model-b-code-reset.sh"
     ;;
   *)
