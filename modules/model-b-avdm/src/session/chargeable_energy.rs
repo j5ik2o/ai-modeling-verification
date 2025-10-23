@@ -1,4 +1,4 @@
-use super::{energy::KwhMilli, errors::SessionValueError};
+use super::{kwh_milli::KwhMilli, errors::SessionValueError};
 
 /// 課金対象となるエネルギー量を表現する値オブジェクト。
 ///

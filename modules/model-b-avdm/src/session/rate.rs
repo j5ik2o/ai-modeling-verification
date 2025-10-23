@@ -3,7 +3,7 @@ use std::{
   num::NonZeroU32,
 };
 
-use super::{energy::KwhMilli, errors::SessionValueError, money::MoneyYen};
+use super::{kwh_milli::KwhMilli, errors::SessionValueError, money_yen::MoneyYen};
 
 /// kWh あたりの料金単価（円）を表す値オブジェクト。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

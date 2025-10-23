@@ -9,18 +9,18 @@ pub(crate) const MAX_YEN: u64 = 1_000_000;
 mod base;
 mod bounded;
 mod chargeable_energy;
-mod energy;
+mod kwh_milli;
 mod errors;
-mod money;
+mod money_yen;
 mod rate;
 mod session_id;
 
 pub use base::Session;
 pub use bounded::BoundedU64;
 pub use chargeable_energy::ChargeableEnergy;
-pub use energy::KwhMilli;
+pub use kwh_milli::KwhMilli;
 pub use errors::SessionValueError;
-pub use money::MoneyYen;
+pub use money_yen::MoneyYen;
 pub use rate::RateYenPerKwh;
 pub use session_id::SessionId;
 
