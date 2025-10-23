@@ -11,11 +11,7 @@ impl<const MAX: u64> BoundedU64<MAX> {
   /// `value <= MAX` のとき `Some`、それ以外は `None`。
   #[must_use]
   pub fn new(value: u64) -> Option<Self> {
-    if value <= MAX {
-      Some(Self(value))
-    } else {
-      None
-    }
+    if value <= MAX { Some(Self(value)) } else { None }
   }
 
   /// 内部の数値を取得する。

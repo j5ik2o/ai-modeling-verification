@@ -21,7 +21,7 @@ pub enum SessionValueError {
     /// セッション開始時刻。
     started_at: OffsetDateTime,
     /// セッション終了時刻。
-    ended_at: OffsetDateTime,
+    ended_at:   OffsetDateTime,
   },
   /// 金額が `u64` 上限を超えた。
   #[error("料金が表現できる上限を超過しました (入力: {provided})")]
@@ -41,7 +41,7 @@ pub enum SessionValueError {
     /// 入力値。
     provided: u64,
     /// 許容上限。
-    max: u64,
+    max:      u64,
   },
   /// 金額が許容範囲を超過した。
   #[error("請求額が上限を超過しています (入力: {provided} / 上限: {max})")]
@@ -49,6 +49,6 @@ pub enum SessionValueError {
     /// 入力値。
     provided: u64,
     /// 許容上限。
-    max: u64,
+    max:      u64,
   },
 }

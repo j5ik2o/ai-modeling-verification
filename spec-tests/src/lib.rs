@@ -1,4 +1,5 @@
-//! spec-tests クレートは、AVDM と 非AVDM の実装を共通受け入れテストで比較するためのハーネスを提供します。
+//! spec-tests クレートは、AVDM と 非AVDM
+//! の実装を共通受け入れテストで比較するためのハーネスを提供します。
 #![deny(missing_docs)]
 #![deny(clippy::missing_errors_doc)]
 #![deny(clippy::missing_panics_doc)]
@@ -12,7 +13,7 @@ pub struct BillingResult {
   /// 課金対象エネルギー量（ミリkWh）。
   pub billed_energy_milli: u64,
   /// 請求金額（円）。
-  pub amount_yen: u64,
+  pub amount_yen:          u64,
 }
 
 impl BillingResult {
@@ -23,14 +24,8 @@ impl BillingResult {
   ///
   /// # Returns
   /// `BillingResult` を返します。
-  pub fn from_model_b(
-    energy: model_b_avdm::session::KwhMilli,
-    amount: model_b_avdm::session::MoneyYen,
-  ) -> Self {
-    Self {
-      billed_energy_milli: u64::from(energy),
-      amount_yen: u64::from(amount),
-    }
+  pub fn from_model_b(energy: model_b_avdm::session::KwhMilli, amount: model_b_avdm::session::MoneyYen) -> Self {
+    Self { billed_energy_milli: u64::from(energy), amount_yen: u64::from(amount) }
   }
 }
 
@@ -53,21 +48,13 @@ pub trait BillingSession {
   ///
   /// # Errors
   /// 実装側で入力が仕様に反した場合にエラーを返します。
-  fn bill_snapshot(
-    &self,
-    end_epoch_ms: i64,
-    energy_milli: i64,
-  ) -> Result<BillingResult, Self::Error>;
+  fn bill_snapshot(&self, end_epoch_ms: i64, energy_milli: i64) -> Result<BillingResult, Self::Error>;
 
   /// セッションを停止し、確定請求と停止済みハンドルを返す。
   ///
   /// # Errors
   /// 実装側で停止処理が認められない場合（例: タイムライン不正など）にエラーを返します。
-  fn stop(
-    self,
-    end_epoch_ms: i64,
-    energy_milli: i64,
-  ) -> Result<(BillingResult, Self::ClosedSession), Self::Error>;
+  fn stop(self, end_epoch_ms: i64, energy_milli: i64) -> Result<(BillingResult, Self::ClosedSession), Self::Error>;
 }
 
 /// 停止済みセッションに対する共通操作（再課金拒否など）を表現する。
@@ -79,9 +66,5 @@ pub trait ClosedBillingSession {
   ///
   /// # Errors
   /// 実装側で停止済み課金が禁止されている場合にエラーを返します。
-  fn bill_after_stop(
-    &self,
-    end_epoch_ms: i64,
-    energy_milli: i64,
-  ) -> Result<BillingResult, Self::Error>;
+  fn bill_after_stop(&self, end_epoch_ms: i64, energy_milli: i64) -> Result<BillingResult, Self::Error>;
 }

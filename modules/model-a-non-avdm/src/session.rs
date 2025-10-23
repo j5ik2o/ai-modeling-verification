@@ -2,19 +2,19 @@
 /// 仕様上の不変条件はほとんど担保せず、呼び出し側で整合性を維持する前提。
 pub struct Session {
   /// セッション開始時刻（エポックミリ秒）。
-  pub started_at: Option<i64>,
+  pub started_at:       Option<i64>,
   /// セッション終了時刻（エポックミリ秒）。
-  pub ended_at: Option<i64>,
+  pub ended_at:         Option<i64>,
   /// セッション全体のエネルギー量（ミリkWh）。
-  pub kwh_milli: u64,
+  pub kwh_milli:        u64,
   /// 単価（円/kWh）。
   pub rate_yen_per_kwh: u32,
   /// 計算後に記録される課金対象エネルギー量（ミリkWh）。
   pub billed_kwh_milli: u64,
   /// 状態文字列（例: "active" / "closed"）。
-  pub status: String,
+  pub status:           String,
   /// 再課金を抑止するためのフラグ。
-  pub already_billed: bool,
+  pub already_billed:   bool,
 }
 
 /// 1 セッションあたりの最大課金額（円）。
@@ -38,25 +38,15 @@ pub fn calculate_charge(session: &mut Session) -> Result<u32, String> {
     return Err(format!("status {} is not billable", session.status));
   }
 
-  let started_at = session
-    .started_at
-    .ok_or_else(|| "missing start timestamp".to_string())?;
-  let ended_at = session
-    .ended_at
-    .ok_or_else(|| "missing end timestamp".to_string())?;
+  let started_at = session.started_at.ok_or_else(|| "missing start timestamp".to_string())?;
+  let ended_at = session.ended_at.ok_or_else(|| "missing end timestamp".to_string())?;
 
   if ended_at <= started_at {
-    return Err(format!(
-      "invalid timeline: start={} end={}",
-      started_at, ended_at
-    ));
+    return Err(format!("invalid timeline: start={} end={}", started_at, ended_at));
   }
 
   if session.kwh_milli > MAX_KWH_MILLI {
-    return Err(format!(
-      "energy {} exceeds max {}",
-      session.kwh_milli, MAX_KWH_MILLI
-    ));
+    return Err(format!("energy {} exceeds max {}", session.kwh_milli, MAX_KWH_MILLI));
   }
 
   let duration_ms = (ended_at - started_at) as f64;
@@ -88,13 +78,13 @@ mod tests {
 
   fn new_session(start_ms: i64, end_ms: i64, energy_milli: u64, rate: u32) -> Session {
     Session {
-      started_at: Some(start_ms),
-      ended_at: Some(end_ms),
-      kwh_milli: energy_milli,
+      started_at:       Some(start_ms),
+      ended_at:         Some(end_ms),
+      kwh_milli:        energy_milli,
       rate_yen_per_kwh: rate,
       billed_kwh_milli: 0,
-      status: "closed".to_string(),
-      already_billed: false,
+      status:           "closed".to_string(),
+      already_billed:   false,
     }
   }
 

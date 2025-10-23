@@ -18,10 +18,8 @@ impl MoneyYen {
   /// # Errors
   /// 上限を超える金額が渡された場合、`SessionValueError::AmountOutOfRange` を返します。
   pub fn try_new(value: u64) -> Result<Self, SessionValueError> {
-    let bounded = BoundedU64::<MAX_YEN>::new(value).ok_or(SessionValueError::AmountOutOfRange {
-      provided: value,
-      max: MAX_YEN,
-    })?;
+    let bounded = BoundedU64::<MAX_YEN>::new(value)
+      .ok_or(SessionValueError::AmountOutOfRange { provided: value, max: MAX_YEN })?;
     Ok(Self::new(bounded))
   }
 
@@ -34,19 +32,11 @@ impl MoneyYen {
   /// 妥当な金額を `Ok` で返します。
   pub(crate) fn try_from_u128(value: u128) -> Result<Self, SessionValueError> {
     if value > MAX_YEN as u128 {
-      Err(SessionValueError::AmountOutOfRange {
-        provided: value as u64,
-        max: MAX_YEN,
-      })
+      Err(SessionValueError::AmountOutOfRange { provided: value as u64, max: MAX_YEN })
     } else {
-      let value_u64: u64 = value
-        .try_into()
-        .map_err(|_| SessionValueError::AmountOverflow { provided: value })?;
-      let bounded =
-        BoundedU64::<MAX_YEN>::new(value_u64).ok_or(SessionValueError::AmountOutOfRange {
-          provided: value_u64,
-          max: MAX_YEN,
-        })?;
+      let value_u64: u64 = value.try_into().map_err(|_| SessionValueError::AmountOverflow { provided: value })?;
+      let bounded = BoundedU64::<MAX_YEN>::new(value_u64)
+        .ok_or(SessionValueError::AmountOutOfRange { provided: value_u64, max: MAX_YEN })?;
       Ok(Self::new(bounded))
     }
   }

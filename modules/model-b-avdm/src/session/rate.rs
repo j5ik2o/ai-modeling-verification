@@ -3,7 +3,7 @@ use std::{
   num::NonZeroU32,
 };
 
-use super::{kwh_milli::KwhMilli, errors::SessionValueError, money_yen::MoneyYen};
+use super::{errors::SessionValueError, kwh_milli::KwhMilli, money_yen::MoneyYen};
 
 /// kWh あたりの料金単価（円）を表す値オブジェクト。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -21,9 +21,7 @@ impl RateYenPerKwh {
   /// # Errors
   /// 0 以下の値が指定された場合、`SessionValueError::NonPositiveRate` を返します。
   pub fn try_new(value: u32) -> Result<Self, SessionValueError> {
-    NonZeroU32::new(value)
-      .map(Self::new)
-      .ok_or(SessionValueError::NonPositiveRate)
+    NonZeroU32::new(value).map(Self::new).ok_or(SessionValueError::NonPositiveRate)
   }
 
   /// エネルギー量に基づき金額を算出する。

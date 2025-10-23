@@ -1,7 +1,8 @@
-use crate::{BillingResult, BillingSession, ClosedBillingSession};
 use model_b_avdm::session::{KwhMilli, RateYenPerKwh, Session, SessionId, SessionValueError};
 use time::{Duration, OffsetDateTime};
 use uuid::Uuid;
+
+use crate::{BillingResult, BillingSession, ClosedBillingSession};
 
 /// AVDM モデルを `BillingSession` として扱うためのアダプタ。
 #[derive(Debug)]
@@ -24,8 +25,8 @@ pub enum ModelBError {
 }
 
 impl BillingSession for ModelBSession {
-  type Error = ModelBError;
   type ClosedSession = ClosedModelBSession;
+  type Error = ModelBError;
 
   /// セッションを開始する。
   ///
@@ -39,11 +40,7 @@ impl BillingSession for ModelBSession {
     Ok(Self { inner: session })
   }
 
-  fn bill_snapshot(
-    &self,
-    end_epoch_ms: i64,
-    energy_milli: i64,
-  ) -> Result<BillingResult, Self::Error> {
+  fn bill_snapshot(&self, end_epoch_ms: i64, energy_milli: i64) -> Result<BillingResult, Self::Error> {
     if energy_milli < 0 {
       return Err(ModelBError::NegativeEnergy(energy_milli));
     }
@@ -53,23 +50,15 @@ impl BillingSession for ModelBSession {
     Ok(BillingResult::from_model_b(billed, amount))
   }
 
-  fn stop(
-    self,
-    end_epoch_ms: i64,
-    energy_milli: i64,
-  ) -> Result<(BillingResult, Self::ClosedSession), Self::Error> {
+  fn stop(self, end_epoch_ms: i64, energy_milli: i64) -> Result<(BillingResult, Self::ClosedSession), Self::Error> {
     if energy_milli < 0 {
       return Err(ModelBError::NegativeEnergy(energy_milli));
     }
     let energy = KwhMilli::try_from_i64(energy_milli)?;
     let ended_at = ms_to_offset_datetime(end_epoch_ms)?;
     let session = self.inner.stop(ended_at, energy)?;
-    let billed = session
-      .billed_energy()
-      .expect("closed session must have billed energy");
-    let amount = session
-      .charged_amount()
-      .expect("closed session must have charged amount");
+    let billed = session.billed_energy().expect("closed session must have billed energy");
+    let amount = session.charged_amount().expect("closed session must have charged amount");
     let result = BillingResult::from_model_b(billed, amount);
     Ok((result, ClosedModelBSession::new(session)))
   }
@@ -94,14 +83,8 @@ impl ClosedModelBSession {
 impl ClosedBillingSession for ClosedModelBSession {
   type Error = ModelBError;
 
-  fn bill_after_stop(
-    &self,
-    _end_epoch_ms: i64,
-    _energy_milli: i64,
-  ) -> Result<BillingResult, Self::Error> {
-    Err(ModelBError::Domain(SessionValueError::AlreadyClosed {
-      session_id: self.inner.id(),
-    }))
+  fn bill_after_stop(&self, _end_epoch_ms: i64, _energy_milli: i64) -> Result<BillingResult, Self::Error> {
+    Err(ModelBError::Domain(SessionValueError::AlreadyClosed { session_id: self.inner.id() }))
   }
 }
 

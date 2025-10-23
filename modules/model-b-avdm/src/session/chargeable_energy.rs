@@ -1,4 +1,4 @@
-use super::{kwh_milli::KwhMilli, errors::SessionValueError};
+use super::{errors::SessionValueError, kwh_milli::KwhMilli};
 
 /// 課金対象となるエネルギー量を表現する値オブジェクト。
 ///
@@ -6,7 +6,7 @@ use super::{kwh_milli::KwhMilli, errors::SessionValueError};
 /// を強制し、按分時の丸め方針を床に固定する。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ChargeableEnergy {
-  total: KwhMilli,
+  total:  KwhMilli,
   billed: KwhMilli,
 }
 
@@ -18,10 +18,7 @@ impl ChargeableEnergy {
   /// を返します。
   pub fn new(total: KwhMilli, billed: KwhMilli) -> Result<Self, SessionValueError> {
     if u64::from(billed) > u64::from(total) {
-      return Err(SessionValueError::EnergyOutOfRange {
-        provided: u64::from(billed),
-        max: u64::from(total),
-      });
+      return Err(SessionValueError::EnergyOutOfRange { provided: u64::from(billed), max: u64::from(total) });
     }
     Ok(Self { total, billed })
   }

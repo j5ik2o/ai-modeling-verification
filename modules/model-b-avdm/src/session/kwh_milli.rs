@@ -18,11 +18,8 @@ impl KwhMilli {
   /// # Errors
   /// 上限を超える値が渡された場合、`SessionValueError::EnergyOutOfRange` を返します。
   pub fn try_new(value: u64) -> Result<Self, SessionValueError> {
-    let bounded =
-      BoundedU64::<MAX_KWH_MILLI>::new(value).ok_or(SessionValueError::EnergyOutOfRange {
-        provided: value,
-        max: MAX_KWH_MILLI,
-      })?;
+    let bounded = BoundedU64::<MAX_KWH_MILLI>::new(value)
+      .ok_or(SessionValueError::EnergyOutOfRange { provided: value, max: MAX_KWH_MILLI })?;
     Ok(Self::new(bounded))
   }
 
@@ -35,8 +32,7 @@ impl KwhMilli {
   }
 
   pub(crate) fn from_milli(value: u64) -> Self {
-    let bounded = BoundedU64::<MAX_KWH_MILLI>::new(value)
-      .expect("billed energy must be within total energy bounds");
+    let bounded = BoundedU64::<MAX_KWH_MILLI>::new(value).expect("billed energy must be within total energy bounds");
     Self::new(bounded)
   }
 
