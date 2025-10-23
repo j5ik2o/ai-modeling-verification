@@ -30,6 +30,7 @@
 
 `modules/model-b-avdm/src/session/base.rs` の `Session` 実装メソッドを完成させてください。
 テストも実装してください。最後にテストが通ることを確認してください。
+※`modules/model-b-avdm/src/session/tests.rs` は空にできません。
 
 現在の状態（以下のメソッドが未実装）：
 ```rust
