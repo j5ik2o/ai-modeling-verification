@@ -9,7 +9,7 @@
 - ❌ **gitコマンドは一切操作しないでください**
 - ✅ **modules/model-a-non-avdm/ のみを編集してください**
 - ❌ **modules/model-b-avdm/ は絶対に見ないでください**（別の実装アプローチです）
-- ✅ **spec-tests/ を参照してください**
+- ❌ **spec-tests/ は絶対に見ないでください**（後で実行するテストケース、正解が書いてあります）
 - ✅ **spec.md は参照OKです**（仕様書として公開されている情報）
 - ✅ **modules/model-a-non-avdm/ 内のコードは自由に参照してください**
 
@@ -27,6 +27,7 @@
 ## 🎯 実装タスク
 
 `modules/model-a-non-avdm/src/session.rs` の `calculate_charge()` 関数を実装してください。
+テストも実装してください。最後にテストが通ることを確認してください。
 
 現在の状態：
 ```rust

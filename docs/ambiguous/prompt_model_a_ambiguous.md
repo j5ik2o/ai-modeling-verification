@@ -1,9 +1,5 @@
 # Model A (Non-AVDM) 実装プロンプト - あいまい版
 
-> **実験日時**: [実施時に記録]
-> **実験者**: [実施者名]
-> **Claude Codeセッション**: 新規セッション（Model B実装とは完全に独立）
-
 ---
 
 ## 🚫 重要な制約
@@ -29,7 +25,8 @@
 
 ## 🎯 実装タスク
 
-`modules/model-a-non-avdm/src/session.rs` の `calculate_charge()` 関数を実装してください。テストも実装してください。
+`modules/model-a-non-avdm/src/session.rs` の `calculate_charge()` 関数を実装してください。
+テストも実装してください。最後にテストが通ることを確認してください。
 
 現在の状態：
 ```rust
@@ -37,8 +34,6 @@ pub fn calculate_charge(session: &mut Session) -> Result<u32, String> {
   todo!("AIに実装させる")
 }
 ```
-
-最後にテストが通ることを確認してください。
 
 ---
 
