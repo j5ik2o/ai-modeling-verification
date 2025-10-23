@@ -1,8 +1,8 @@
 use time::OffsetDateTime;
 
 use super::{
-  FREE_MILLISECONDS, energy::KwhMilli, errors::SessionValueError, money::MoneyYen,
-  rate::RateYenPerKwh, session_id::SessionId,
+  FREE_MILLISECONDS, chargeable_energy::ChargeableEnergy, energy::KwhMilli,
+  errors::SessionValueError, money::MoneyYen, rate::RateYenPerKwh, session_id::SessionId,
 };
 
 /// 充電セッションのライフサイクルを表す列挙体。
@@ -39,44 +39,42 @@ pub enum Session {
 impl Session {
   /// アクティブ状態のセッションを生成する。
   pub fn new_active(id: SessionId, started_at: OffsetDateTime, rate: RateYenPerKwh) -> Self {
-      todo!("new_active")
+      todo!("new_active");
   }
 
   /// セッションIDを取得する。
   pub fn id(&self) -> SessionId {
+      todo!("id");
   }
 
   /// セッション開始時刻を取得する。
-  ///
-  /// # Returns
-  /// 開始時刻。
   pub fn started_at(&self) -> OffsetDateTime {
-      todo!("started_at")
+      todo!("started_at");
   }
 
   /// セッション終了時刻を取得する（アクティブ時は `None`）。
   pub fn ended_at(&self) -> Option<OffsetDateTime> {
-      todo!("ended_at")
+      todo!("ended_at");
   }
 
   /// セッション単価を取得する。
   pub fn rate(&self) -> RateYenPerKwh {
-      todo!("rate")
+      todo!("rate");
   }
 
   /// セッション全体のエネルギー量を取得する（アクティブ時は `None`）。
   pub fn total_energy(&self) -> Option<KwhMilli> {
-      todo!("total_energy")
+      todo!("total_enegry");
   }
 
   /// 課金対象エネルギー量を取得する（アクティブ時は `None`）。
   pub fn billed_energy(&self) -> Option<KwhMilli> {
-      todo!("billed_energy")
+      todo!("billed_energy");
   }
 
   /// 請求金額を取得する（アクティブ時は `None`）。
   pub fn charged_amount(&self) -> Option<MoneyYen> {
-      todo!("charged_amount")
+      todo!("charged_amount");
   }
 
   /// セッションを停止し、請求を確定させる。
@@ -85,7 +83,7 @@ impl Session {
     ended_at: OffsetDateTime,
     total_energy: KwhMilli,
   ) -> Result<Self, SessionValueError> {
-      todo!("stop")
+      todo!("stop");
   }
 
   /// 指定時点での課金スナップショットを取得する。
@@ -94,7 +92,7 @@ impl Session {
     ended_at: OffsetDateTime,
     total_energy: KwhMilli,
   ) -> Result<(KwhMilli, MoneyYen), SessionValueError> {
-      todo!("bill_snapshot")
+      todo!("bill_snapshot");
   }
 
   /// 停止後の追加課金要求に応答する。
@@ -103,7 +101,7 @@ impl Session {
     ended_at: OffsetDateTime,
     total_energy: KwhMilli,
   ) -> Result<(KwhMilli, MoneyYen), SessionValueError> {
-      todo!("bill_after_stop")
+      todo!("bill_after_stop");
   }
 
 }
