@@ -8,11 +8,11 @@ PROMPT_KEY="${1:-model-a}"
 
 case "${PROMPT_KEY}" in
   model-a|a)
-    PROMPT_FILE="${ROOT_DIR}/docs/ambiguous/prompt_model_a_ambiguous.md"
+    PROMPT_FILE="${ROOT_DIR}/docs/precise/prompt_model_a_precise.md"
     RESET_SCRIPT="${SCRIPT_DIR}/model-a-code-reset.sh"
     ;;
   model-b|b)
-    PROMPT_FILE="${ROOT_DIR}/docs/ambiguous/prompt_model_b_ambiguous.md"
+    PROMPT_FILE="${ROOT_DIR}/docs/docs/precise/prompt_model_b_precise.md"
     RESET_SCRIPT="${SCRIPT_DIR}/model-b-code-reset.sh"
     ;;
   *)
