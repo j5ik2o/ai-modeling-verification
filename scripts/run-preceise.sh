@@ -34,8 +34,6 @@ if [[ -n "${RESET_SCRIPT:-}" ]]; then
   "${RESET_SCRIPT}"
 fi
 
-claude \
-  --permission-mode acceptEdits \
-  --output-format stream-json \
-  --verbose \
-  -p "$(cat "${PROMPT_FILE}")"
+codex exec \
+  --full-auto \
+  "$(cat "${PROMPT_FILE}")"
