@@ -29,7 +29,7 @@
 
 ## 🎯 実装タスク
 
-`modules/model-a-non-avdm/src/session.rs` の `calculate_charge()` 関数を実装してください。
+`modules/model-a-non-avdm/src/session.rs` の `calculate_charge()` 関数を実装してください。テストも実装してください。
 
 現在の状態：
 ```rust
@@ -37,6 +37,8 @@ pub fn calculate_charge(session: &mut Session) -> Result<u32, String> {
   todo!("AIに実装させる")
 }
 ```
+
+最後にテストが通ることを確認してください。
 
 ---
 

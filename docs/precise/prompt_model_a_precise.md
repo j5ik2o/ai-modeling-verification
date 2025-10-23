@@ -63,6 +63,7 @@ pub fn calculate_charge(session: &mut Session) -> Result<u32, String> {
    課金対象比率 = 課金対象時間 / セッション時間
    課金対象エネルギー（ミリkWh） = floor(総エネルギー（ミリkWh） × 課金対象比率)
    ```
+   - 切り捨てにより課金対象エネルギーが総エネルギーを上回らないことを必ず保証する。
 
 4. **金額計算**
    ```
