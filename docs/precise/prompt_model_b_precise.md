@@ -293,7 +293,7 @@ fn scenario1_six_minutes_charges_one_minute() {
   let session = Session::new_active(
     SessionId::new(Uuid::nil()),
     offset(0),
-    RateYenPerKwh::new(50).unwrap(),
+    RateYenPerKwh::try_new(50).unwrap(),
   );
 
   let stopped = session.stop(
@@ -310,7 +310,7 @@ fn scenario2_four_minutes_is_free() {
   let session = Session::new_active(
     SessionId::new(Uuid::nil()),
     offset(0),
-    RateYenPerKwh::new(80).unwrap(),
+    RateYenPerKwh::try_new(80).unwrap(),
   );
 
   let stopped = session.stop(
@@ -327,7 +327,7 @@ fn scenario3_exactly_five_minutes_is_free() {
   let session = Session::new_active(
     SessionId::new(Uuid::nil()),
     offset(0),
-    RateYenPerKwh::new(100).unwrap(),
+    RateYenPerKwh::try_new(100).unwrap(),
   );
 
   let stopped = session.stop(
@@ -348,7 +348,7 @@ fn error_when_stop_already_closed() {
   let session = Session::new_active(
     SessionId::new(Uuid::nil()),
     offset(0),
-    RateYenPerKwh::new(50).unwrap(),
+    RateYenPerKwh::try_new(50).unwrap(),
   );
 
   let stopped = session.stop(offset(6), KwhMilli::from_milli(2_400)).unwrap();
@@ -363,7 +363,7 @@ fn error_when_bill_after_stop() {
   let session = Session::new_active(
     SessionId::new(Uuid::nil()),
     offset(0),
-    RateYenPerKwh::new(50).unwrap(),
+    RateYenPerKwh::try_new(50).unwrap(),
   );
 
   let stopped = session.stop(offset(6), KwhMilli::from_milli(2_400)).unwrap();
@@ -378,7 +378,7 @@ fn error_when_end_before_start() {
   let session = Session::new_active(
     SessionId::new(Uuid::nil()),
     offset(10), // 開始: 10分
-    RateYenPerKwh::new(50).unwrap(),
+    RateYenPerKwh::try_new(50).unwrap(),
   );
 
   // 終了時刻が開始時刻より前
@@ -391,7 +391,7 @@ fn error_when_energy_over_limit() {
   let session = Session::new_active(
     SessionId::new(Uuid::nil()),
     offset(0),
-    RateYenPerKwh::new(50).unwrap(),
+    RateYenPerKwh::try_new(50).unwrap(),
   );
 
   // KwhMilli::from_milli() が上限を超える値を拒否する
@@ -405,7 +405,7 @@ fn error_when_amount_over_limit() {
   let session = Session::new_active(
     SessionId::new(Uuid::nil()),
     offset(0),
-    RateYenPerKwh::new(20_000).unwrap(), // 高額な単価
+    RateYenPerKwh::try_new(20_000).unwrap(), // 高額な単価
   );
 
   // RateYenPerKwh::charge() が上限超過を検出してエラー
@@ -421,6 +421,8 @@ fn error_when_amount_over_limit() {
 ### 既存のドメインモデル型を活用
 
 1. **`KwhMilli` (modules/model-b-avdm/src/session/energy.rs)**
+   - `new(BoundedU64<MAX_KWH_MILLI>)`: 上限付き生成（空気読まずに上限超過できない）
+   - `try_new(u64)`: 生の値から検証付き生成
    - `from_milli(u64)`: ミリkWhから生成
    - `try_from_i64(i64)`: 負値チェック付き変換
    - `into_u64_milli()`: u64値取得
@@ -429,12 +431,14 @@ fn error_when_amount_over_limit() {
    - 自動的に上限検証（1,000,000ミリkWh）
 
 2. **`MoneyYen` (modules/model-b-avdm/src/session/money.rs)**
-   - `from_yen(u32)`: 円から生成
+   - `new(BoundedU64<MAX_YEN>)`: 上限付き生成
+   - `try_new(u64)`: 生の値から検証付き生成
    - `into_u64_yen()`: u64値取得
    - 自動的に上限検証（1,000,000円）
 
 3. **`RateYenPerKwh` (modules/model-b-avdm/src/session/rate.rs)**
-   - `new(u32)`: 単価生成
+   - `new(NonZeroU32)`: 非ゼロ単価を直接生成
+   - `try_new(u32)`: 生の値から検証付き生成
    - `charge(KwhMilli) -> Result<MoneyYen, _>`: 金額計算
    - 自動的に切り捨て処理
 
@@ -442,6 +446,11 @@ fn error_when_amount_over_limit() {
    - `InvalidTimeline { started_at, ended_at }`: 時刻逆転エラー
    - `AlreadyClosed { session_id }`: 停止済みエラー
    - その他のエラーバリアント
+
+5. **`BoundedU64<MAX>` (modules/model-b-avdm/src/session/bounded.rs)**
+   - 上限付き `u64` を表すヘルパー
+   - `BoundedU64::<MAX>::new(value)` で閾値チェックを強制
+   - `KwhMilli` や `MoneyYen` の厳格なコンストラクタで利用
 
 ---
 

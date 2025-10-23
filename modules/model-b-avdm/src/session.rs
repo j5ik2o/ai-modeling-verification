@@ -7,6 +7,7 @@ pub(crate) const MAX_KWH_MILLI: u64 = 1_000_000;
 pub(crate) const MAX_YEN: u64 = 1_000_000;
 
 mod base;
+mod bounded;
 mod chargeable_energy;
 mod energy;
 mod errors;
@@ -15,6 +16,7 @@ mod rate;
 mod session_id;
 
 pub use base::Session;
+pub use bounded::BoundedU64;
 pub use chargeable_energy::ChargeableEnergy;
 pub use energy::KwhMilli;
 pub use errors::SessionValueError;

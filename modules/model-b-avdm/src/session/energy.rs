@@ -1,28 +1,29 @@
 use std::convert::{From, TryFrom};
 
-use super::{MAX_KWH_MILLI, errors::SessionValueError};
+use super::{MAX_KWH_MILLI, bounded::BoundedU64, errors::SessionValueError};
 
 /// エネルギー量（ミリkWh単位）を表す値オブジェクト。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct KwhMilli(pub(super) u64);
 
 impl KwhMilli {
-  /// 0 以上かつ上限 `MAX_KWH_MILLI` 以下のエネルギー量（ミリkWh）を生成する。
-  ///
-  /// # Returns
-  /// 妥当なエネルギー量を `Ok` で返します。
+  /// 上限付きエネルギー量を生成する。
+  #[must_use]
+  pub fn new(value: BoundedU64<MAX_KWH_MILLI>) -> Self {
+    Self(value.get())
+  }
+
+  /// 生の値からエネルギー量を生成する。
   ///
   /// # Errors
   /// 上限を超える値が渡された場合、`SessionValueError::EnergyOutOfRange` を返します。
-  pub fn new(value: u64) -> Result<Self, SessionValueError> {
-    if value > MAX_KWH_MILLI {
-      Err(SessionValueError::EnergyOutOfRange {
+  pub fn try_new(value: u64) -> Result<Self, SessionValueError> {
+    let bounded =
+      BoundedU64::<MAX_KWH_MILLI>::new(value).ok_or(SessionValueError::EnergyOutOfRange {
         provided: value,
         max: MAX_KWH_MILLI,
-      })
-    } else {
-      Ok(Self(value))
-    }
+      })?;
+    Ok(Self::new(bounded))
   }
 
   /// エネルギー量 0 を表す定数生成を行う。
@@ -34,7 +35,9 @@ impl KwhMilli {
   }
 
   pub(crate) fn from_milli(value: u64) -> Self {
-    Self(value)
+    let bounded = BoundedU64::<MAX_KWH_MILLI>::new(value)
+      .expect("billed energy must be within total energy bounds");
+    Self::new(bounded)
   }
 
   /// 符号付き整数からエネルギー量を生成する。
@@ -49,7 +52,7 @@ impl KwhMilli {
       return Err(SessionValueError::NegativeEnergy { provided: value });
     }
     let unsigned = value as u64;
-    Self::new(unsigned)
+    Self::try_new(unsigned)
   }
 
   pub(crate) fn into_u128_milli(self) -> u128 {
@@ -61,7 +64,7 @@ impl TryFrom<u64> for KwhMilli {
   type Error = SessionValueError;
 
   fn try_from(value: u64) -> Result<Self, Self::Error> {
-    Self::new(value)
+    Self::try_new(value)
   }
 }
 

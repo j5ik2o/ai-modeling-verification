@@ -34,7 +34,7 @@ impl BillingSession for ModelBSession {
   /// - 単価がドメイン制約に反する場合。
   fn start(start_epoch_ms: i64, rate_yen_per_kwh: u32) -> Result<Self, Self::Error> {
     let started_at = ms_to_offset_datetime(start_epoch_ms)?;
-    let rate = RateYenPerKwh::new(rate_yen_per_kwh)?;
+    let rate = RateYenPerKwh::try_new(rate_yen_per_kwh)?;
     let session = Session::new_active(SessionId::new(Uuid::nil()), started_at, rate);
     Ok(Self { inner: session })
   }

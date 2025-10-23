@@ -2,8 +2,7 @@ use time::OffsetDateTime;
 
 use super::{
   FREE_MILLISECONDS, chargeable_energy::ChargeableEnergy, energy::KwhMilli,
-  errors::SessionValueError, money::MoneyYen, rate::RateYenPerKwh,
-  session_id::SessionId,
+  errors::SessionValueError, money::MoneyYen, rate::RateYenPerKwh, session_id::SessionId,
 };
 
 /// 充電セッションのライフサイクルを表す列挙体。
@@ -233,11 +232,8 @@ impl Session {
     let free_ms = FREE_MILLISECONDS.min(total_ms);
     let chargeable_ms = total_ms - free_ms;
 
-    let chargeable = ChargeableEnergy::from_chargeable_window(
-      total_energy,
-      chargeable_ms,
-      total_ms,
-    )?;
+    let chargeable =
+      ChargeableEnergy::from_chargeable_window(total_energy, chargeable_ms, total_ms)?;
     Ok(chargeable.billed())
   }
 

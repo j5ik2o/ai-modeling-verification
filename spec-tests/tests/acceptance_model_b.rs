@@ -1,18 +1,11 @@
 mod common;
 
 use common::{
-  assert_amount_over_limit_rejected,
-  assert_deterministic,
-  assert_energy_over_limit_rejected,
-  assert_invalid_timeline_rejected,
-  assert_negative_energy_rejected,
-  assert_rejects_after_stop,
-  assert_snapshots,
-  assert_stop_case,
-  StopCase,
-  STOP_CASES,
+  STOP_CASES, StopCase, assert_amount_over_limit_rejected, assert_deterministic,
+  assert_energy_over_limit_rejected, assert_invalid_timeline_rejected,
+  assert_negative_energy_rejected, assert_rejects_after_stop, assert_snapshots, assert_stop_case,
 };
-use spec_tests::{adapters::ModelBSession, BillingResult};
+use spec_tests::{BillingResult, adapters::ModelBSession};
 
 /// 開始から5分無料・ゼロエネルギー・長時間利用・最大課金額境界など代表的な停止ケースで、課金結果が期待通りになることを確認する。
 #[test]
