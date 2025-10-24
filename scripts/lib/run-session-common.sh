@@ -131,19 +131,19 @@ rsc_exec_prompt() {
 
   local cmd
   case "${mode}" in
-    codex)
-      cmd=(codex exec --full-auto)
-      ;;
-    claude)
-      cmd=(claude-code exec --full-auto)
-      ;;
-    gemini)
-      cmd=(gemini-code exec --full-auto)
-      ;;
-    *)
-      echo "未対応のモードです: ${mode}" >&2
-      return 1
-      ;;
+  codex)
+    cmd=(codex exec --full-auto)
+    ;;
+  claude)
+    cmd=(claude --dangerously-skip-permissions --output-format stream-json --verbose -p)
+    ;;
+  gemini)
+    cmd=(gemini --yolo -p)
+    ;;
+  *)
+    echo "未対応のモードです: ${mode}" >&2
+    exit 1
+    ;;
   esac
 
   "${cmd[@]}" "$(cat "${prompt_file}")"
