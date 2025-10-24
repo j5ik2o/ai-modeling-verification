@@ -10,14 +10,39 @@ if [[ -n "${RSC_LIB_LOADED:-}" ]]; then
 fi
 RSC_LIB_LOADED=1
 
+rsc_normalize_mode() {
+  local input="$1"
+  local lower
+  lower="$(printf '%s' "${input}" | tr '[:upper:]' '[:lower:]')"
+
+  case "${lower}" in
+    codex|c)
+      printf '%s' "codex"
+      ;;
+    claude|anthropic|a|cl)
+      printf '%s' "claude"
+      ;;
+    gemini|g)
+      printf '%s' "gemini"
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
 rsc_parse_args() {
-  RSC_MODE="codex"
+  RSC_MODE="claude"
   RSC_PROMPT_KEY=""
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --mode=*)
-        RSC_MODE="${1#--mode=}"
+        local value="${1#--mode=}"
+        if ! RSC_MODE="$(rsc_normalize_mode "${value}")"; then
+          echo "未対応のモードです: ${value}" >&2
+          return 1
+        fi
         shift
         ;;
       --mode)
@@ -25,7 +50,10 @@ rsc_parse_args() {
           echo "--mode オプションには引数が必要です" >&2
           return 1
         fi
-        RSC_MODE="$2"
+        if ! RSC_MODE="$(rsc_normalize_mode "$2")"; then
+          echo "未対応のモードです: $2" >&2
+          return 1
+        fi
         shift 2
         ;;
       model-a|a)
@@ -54,15 +82,6 @@ rsc_parse_args() {
   if [[ -z "${RSC_PROMPT_KEY}" ]]; then
     RSC_PROMPT_KEY="model-a"
   fi
-
-  case "${RSC_MODE}" in
-    codex|claude|gemini)
-      ;;
-    *)
-      echo "未対応のモードです: ${RSC_MODE}" >&2
-      return 1
-      ;;
-  esac
 
   return 0
 }

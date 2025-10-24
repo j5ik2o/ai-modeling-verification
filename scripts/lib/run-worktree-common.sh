@@ -11,11 +11,16 @@ fi
 RWT_LIB_LOADED=1
 
 rwt_run() {
-  local script_dir="$1"
-  local repo_root="$2"
-  local target_script="$3"
-  local tmp_prefix="$4"
+  local script_dir="${1:-}"
+  local repo_root="${2:-}"
+  local target_script="${3:-}"
+  local tmp_prefix="${4:-}"
   shift 4
+
+  if [[ -z "${script_dir}" || -z "${repo_root}" || -z "${target_script}" || -z "${tmp_prefix}" ]]; then
+    echo "rwt_run requires script_dir, repo_root, target_script, tmp_prefix" >&2
+    return 1
+  fi
 
   local tmp_base
   tmp_base="$(mktemp -d "${TMPDIR:-/tmp}/${tmp_prefix}-worktree.XXXXXX")"
