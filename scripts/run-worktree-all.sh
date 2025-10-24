@@ -47,7 +47,7 @@ start_job() {
   shift
   local log_path="${run_dir}/${name}.log"
 
-  nohup "${script_path}" "$@" >"${log_path}" 2>&1 &
+  "${script_path}" "$@" >"${log_path}" 2>&1 &
   local pid=$!
   echo "${pid}" > "${run_dir}/${name}.pid"
   echo "${name} started (pid=${pid})" >&2
