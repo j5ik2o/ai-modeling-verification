@@ -79,10 +79,10 @@ case "${MODE}" in
     EXEC_CMD=(codex exec --full-auto)
     ;;
   claude)
-    EXEC_CMD=(claude-code exec --full-auto)
+    EXEC_CMD=(claude --dangerously-skip-permissions --output-format stream-json --verbose -p)
     ;;
   gemini)
-    EXEC_CMD=(gemini-code exec --full-auto)
+    EXEC_CMD=(gemini --yolo -p)
     ;;
   *)
     echo "未対応のモードです: ${MODE}" >&2
