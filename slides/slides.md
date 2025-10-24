@@ -1,6 +1,6 @@
 ---
 theme: seriph
-colorSchema: dark
+colorSchema: auto
 class: text-center
 highlighter: shiki
 lineNumbers: false
@@ -17,92 +17,124 @@ layout: cover
 
 ---
 
-## 目的
+## アジェンダ
 
-- Always-Valid Domain ModelがどのぐらいAIを支援するのか調べる
+- 背景と目的
+- 実験設計と計測方法
+- 4実験の結果サマリ
+- 失敗から学ぶ（ambiguous × model-a）
+- 成功パターン（precise プロンプト）
+- デモ運用と自動化の工夫
+- 学び・次のアクション
+
+---
+layout: two-cols
+---
+## 背景と目的
+
+- AIコーディング支援を利用しつつ、Always-Valid Domain Model(AVDM) が品質に与える影響を検証
+- EV充電料金計算ドメインで、**曖昧 vs 精密**プロンプト、**非AVDM(model-a) vs AVDM(model-b)** の4通りを比較
+
+::right::
+
+![timeline](https://dummyimage.com/480x300/1f2933/ffffff&text=AI+Modeling+Verification)
 
 ---
 
-## 調査方法
+## 実験設計
 
-- EVの充電料金を計算する問題
-
-
+- `scripts/run-worktree-all.sh` が4ジョブを並列投入し、各ジョブは一時 worktree で `claude` モードを駆動
+- 実行ごとにログと PID を `${TMPDIR}` 配下に保存し、終了後に `experiments/run-20251025-070615/logs` へ収集
+- 成果物：各ログ (`*.log`)、補助 PID (`*.pid`)、デモ動画 `2025-10-25 07-06-22.mp4`
+- 計測指標：テスト結果（単体・受入）、経過時間、代表エラーメッセージ
 
 ---
 
+## 実験結果マトリクス
 
-## あいまいAパターンの受入テストの結果
+| プロンプト | モデル | 単体テスト | 受入テスト | 経過時間 |
+|-------| --- | --- | --- | --- |
+| あいまい  | model-a | ✅ 8/8 | ⚠️ 4/9 | 03:14 |
+| あいまい  | model-b | ✅ 18/18 | ✅ 9/9 | 06:13 |
+| 明確    | model-a | ✅ 8/8 | ✅ 9/9 | 01:17 |
+| 明確    | model-b | ✅ 19/19 | ✅ 9/9 | 04:18 |
 
-3分で作業完了したが、5/9で失敗した。
+> ⚠️ `Session already ended` が複数シナリオで発生し、ambiguous × model-a が失敗。
+
+---
+layout: center
+---
+
+## あいまいプロンプト × 非AVDM 失敗の実相
 
 ```
-failures:
-    scenario11_same_input_same_result
-    scenario12_rounding_is_floor_and_monotonic
-    scenario5_progressive_billing_is_monotonic
-    scenario6_rejects_billing_after_stop
-    stop_scenarios_match_expected
-
-test result: FAILED. 4 passed; 5 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
-error: test failed, to rerun pass `-p spec-tests --test acceptance_model_a`
-cargo test failed for package spec-tests (continuing)
-elapsed: 03:14
+model-a stop failed for scenario1_six_minutes: 計算失敗: Session already ended
+model-a snapshot failed at 3: 計算失敗: Session already ended
 ```
 
+- あいまいプロンプトのため、停止処理前提が崩れたコードが生成され状態遷移が破綻
+- 受入テスト 5/9 が崩壊し、停止後課金やモノトニック性が保証できなかった
+- **非AVDM** では例外を型で防げず、バグが再注入されやすい
+
 ---
+layout: two-cols
+---
+## あいまいプロンプト × AVDM が踏みとどまった要因
 
-## あいまいBパターンの単体テストの結果
+- AVDM により `Session` が不変条件を保持、曖昧指示でも破壊的変更が拒否
+- 受入テスト 9/9 合格、単体テストも完全成功
+- 時間は要したが、ロジック破綻は発生せず
 
-15個ある単体テストのうち1個が失敗。
-
+::right::
 ```text
-Finished `test` profile [unoptimized + debuginfo] target(s) in 1.00s
-Running unittests src/lib.rs (target/debug/deps/model_b_avdm-fab8b06ee93ef29f)
-error: test failed, to rerun pass `-p model-b-avdm --lib`
-
-running 18 tests
-test session::tests::test_bill_after_stop_on_closed_session ... ok
-<snip>
-test session::tests::test_free_period_just_over_5_minutes ... FAILED
-<snip>
-test result: FAILED. 17 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
-```
-
----
-
-# あいまいBパターンの受入テストの結果
-
-6分ぐらいかかったが、最終的にすべての受入テストがパスした。
-
-```
-running 9 tests
-test scenario11_same_input_same_result ... ok
-test scenario10_invalid_timeline_is_rejected ... ok
-test scenario14_amount_over_limit_is_rejected ... ok
-test scenario12_rounding_is_floor_and_monotonic ... ok
-test scenario15_energy_over_limit_is_rejected ... ok
-test scenario6_rejects_billing_after_stop ... ok
 test scenario5_progressive_billing_is_monotonic ... ok
-test scenario9_negative_energy_is_rejected ... ok
+test scenario6_rejects_billing_after_stop ... ok
 test stop_scenarios_match_expected ... ok
+```
 
-test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+---
+layout: two-cols
+---
 
-elapsed: 06:13
+## 明確なプロンプトでの安定化
+
+- 明確な仕様提示により、model-a でも期待通りの修正が入り 9/9 合格
+- model-b では冗長な補強も入り、ドメインオブジェクトの自己診断が進化
+- 所要時間が短縮され、ワークフロー全体の determinism が向上
+
+::right::
+```text
+test result: ok. 9 passed; 0 failed
+elapsed: 01:17 (model-a precise)
+
+test result: ok. 9 passed; 0 failed
+elapsed: 04:18 (model-b precise)
 ```
 
 ---
 
-## 学びとアンチパターン
-- ドメインイベントが定義されていないと例外処理が暗黙になる
-- データサイエンスチームとドメイン専門家の言語断絶を放置しない
-- メトリクスだけで判断せずユーザーストーリーを回帰対象に含める
+## デモとリスク管理
+
+- 登壇当日は**録画済みデモ**を再生し、ライブ実行によるリスクを回避
+- 動画: `experiments/run-20251025-070615/2025-10-25 07-06-22.mp4`
+
+<video src="../experiments/run-20251025-070615/2025-10-25 07-06-22.mp4" controls style="width: 75%; margin: 1.5rem auto; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.4);"></video>
+
+- 再生前に `scripts/run-worktree-all.sh` の結果ログを提示し、信頼性の根拠を説明
+- Slidev 上で動画が再生できない環境向けに、ダウンロードリンクを別途案内予定
 
 ---
 
-## 次のアクション
-- 今週中に現状モデルのドメインイベント棚卸しを実施
-- 主要境界シナリオを例ベーステストとして自動化
-- モデルリリース前の検証プレイブックを整備しナレッジ共有
+## 学び
+
+- **プロンプト解像度が最重要**: 曖昧指示では非AVDMがバグを再び生む
+- **AVDM の防御力**: 値オブジェクトと不変条件で曖昧さを吸収
+- **自動化の威力**: `run-worktree-all.sh` により、並列実験とログ収集が確実
+- **記録の重要性**: 成果ログ＋動画で検証結果を「再演可能」に保管
+
+---
+layout: center
+---
+
+## ご清聴ありがとうございました
 
