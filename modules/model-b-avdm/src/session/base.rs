@@ -41,14 +41,15 @@ impl Session {
   /// セッションを停止し、請求を確定させる。
   pub fn stop(self, ended_at: OffsetDateTime, total_energy: KwhMilli) -> Result<Self, SessionValueError> {
     match self {
-      | Self::Active { id, started_at, rate } => {
+      Self::Active { id, started_at, rate } => {
         let timeline = SessionTimeline::between(started_at, ended_at)?;
         let window = timeline.consume_grace_period(Self::grace_period());
         let energy = ChargeableEnergy::allocate(total_energy, window)?;
         let bill = SessionBill::settle(energy, rate)?;
+
         Ok(Self::Closed { id, started_at, ended_at, rate, bill })
-      },
-      | Self::Closed { id, .. } => Err(SessionValueError::AlreadyClosed { session_id: id }),
+      }
+      Self::Closed { id, .. } => Err(SessionValueError::AlreadyClosed { session_id: id }),
     }
   }
 
@@ -59,30 +60,29 @@ impl Session {
     total_energy: KwhMilli,
   ) -> Result<SessionBill, SessionValueError> {
     match self {
-      | Self::Active { started_at, rate, .. } => {
+      Self::Active { started_at, rate, .. } => {
         let timeline = SessionTimeline::between(*started_at, ended_at)?;
         let window = timeline.consume_grace_period(Self::grace_period());
         let energy = ChargeableEnergy::allocate(total_energy, window)?;
         SessionBill::settle(energy, *rate)
-      },
-      | Self::Closed { id, .. } => Err(SessionValueError::AlreadyClosed { session_id: *id }),
+      }
+      Self::Closed { id, .. } => Err(SessionValueError::AlreadyClosed { session_id: *id }),
     }
   }
 
   /// 停止後の追加課金要求に応答する。
   pub fn bill_after_stop(
     &self,
-    ended_at: OffsetDateTime,
-    total_energy: KwhMilli,
+    _ended_at: OffsetDateTime,
+    _total_energy: KwhMilli,
   ) -> Result<SessionBill, SessionValueError> {
     match self {
-      | Self::Closed { id, .. } => Err(SessionValueError::AlreadyClosed { session_id: *id }),
-      | Self::Active { started_at, rate, .. } => {
-        let timeline = SessionTimeline::between(*started_at, ended_at)?;
-        let window = timeline.consume_grace_period(Self::grace_period());
-        let energy = ChargeableEnergy::allocate(total_energy, window)?;
-        SessionBill::settle(energy, *rate)
-      },
+      Self::Active { .. } => {
+        // Active状態のときは bill_snapshot を使うべき
+        // ここに到達することは想定外だが、エラーを返すのが安全
+        panic!("bill_after_stop should not be called on Active session. Use bill_snapshot instead.")
+      }
+      Self::Closed { id, .. } => Err(SessionValueError::AlreadyClosed { session_id: *id }),
     }
   }
 
@@ -90,7 +90,7 @@ impl Session {
   #[must_use]
   pub fn identity(&self) -> SessionId {
     match self {
-      | Self::Active { id, .. } | Self::Closed { id, .. } => *id,
+      Self::Active { id, .. } | Self::Closed { id, .. } => *id,
     }
   }
 
@@ -98,8 +98,8 @@ impl Session {
   #[must_use]
   pub fn statement(&self) -> Option<&SessionBill> {
     match self {
-      | Self::Closed { bill, .. } => Some(bill),
-      | Self::Active { .. } => None,
+      Self::Active { .. } => None,
+      Self::Closed { bill, .. } => Some(bill),
     }
   }
 

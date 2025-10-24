@@ -1,14 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-repo_root="$(cd "${script_dir}/.." && pwd)"
-source1="${repo_root}/modules/model-b-avdm/reset/base.rs"
-dest1="${repo_root}/modules/model-b-avdm/src/session/base.rs"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-cp "$source1" "$dest1"
+source "${SCRIPT_DIR}/lib/reset-common.sh"
 
-source2="${repo_root}/modules/model-b-avdm/reset/tests.rs"
-dest2="${repo_root}/modules/model-b-avdm/src/session/tests.rs"
-
-cp "$source2" "$dest2"
+rc_copy "${SCRIPT_DIR}" "modules/model-b-avdm/reset/base.rs" "modules/model-b-avdm/src/session/base.rs"
+rc_copy "${SCRIPT_DIR}" "modules/model-b-avdm/reset/tests.rs" "modules/model-b-avdm/src/session/tests.rs"

@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-repo_root="$(cd "${script_dir}/.." && pwd)"
-source="${repo_root}/modules/model-a-non-avdm/reset/session.rs"
-dest="${repo_root}/modules/model-a-non-avdm/src/session.rs"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-cp "$source" "$dest"
+source "${SCRIPT_DIR}/lib/reset-common.sh"
+
+rc_copy "${SCRIPT_DIR}" "modules/model-a-non-avdm/reset/session.rs" "modules/model-a-non-avdm/src/session.rs"
