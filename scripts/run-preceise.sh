@@ -4,6 +4,11 @@ set -euo pipefail
 # Claude Code 用あいまいプロンプトを送信するヘルパースクリプト。
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+if [[ "${1:-}" == "--" ]]; then
+  shift
+fi
+
 PROMPT_KEY="${1:-model-a}"
 
 case "${PROMPT_KEY}" in
@@ -37,3 +42,5 @@ fi
 codex exec \
   --full-auto \
   "$(cat "${PROMPT_FILE}")"
+
+cargo test
