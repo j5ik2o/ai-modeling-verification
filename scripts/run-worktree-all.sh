@@ -9,7 +9,7 @@ run_dir="${log_root}/run-${timestamp}"
 
 mkdir -p "${run_dir}"
 
-MODE="codex"
+MODE="claude"
 EXTRA_ARGS=()
 
 while [[ $# -gt 0 ]]; do
