@@ -7,7 +7,11 @@ SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
 SCRIPT_PATH="${SCRIPT_DIR}/${SCRIPT_NAME}"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
-echo "==> 実行開始: ${SCRIPT_PATH}"
+printf '==> 実行開始: %s' "${SCRIPT_PATH}"
+if (($#)); then
+  printf ' %q' "$@"
+fi
+printf '\n'
 
 source "${SCRIPT_DIR}/lib/run-session-common.sh"
 
@@ -31,4 +35,8 @@ END_TIME=$(date +%s)
 ELAPSED=$((END_TIME - START_TIME))
 printf 'elapsed: %02d:%02d\n' $((ELAPSED/60)) $((ELAPSED%60))
 
-echo "==> 実行終了: ${SCRIPT_PATH}"
+printf '==> 実行終了: %s' "${SCRIPT_PATH}"
+if (($#)); then
+  printf ' %q' "$@"
+fi
+printf '\n'
