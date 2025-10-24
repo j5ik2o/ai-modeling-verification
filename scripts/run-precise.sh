@@ -3,7 +3,11 @@ set -euo pipefail
 
 # Claude Code 用精密プロンプトを送信するヘルパースクリプト。
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
+SCRIPT_PATH="${SCRIPT_DIR}/${SCRIPT_NAME}"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+echo "==> 実行開始: ${SCRIPT_PATH}"
 
 source "${SCRIPT_DIR}/lib/run-session-common.sh"
 
@@ -26,3 +30,5 @@ rsc_run_tests "${ROOT_DIR}" "${RSC_PROMPT_KEY}" || true
 END_TIME=$(date +%s)
 ELAPSED=$((END_TIME - START_TIME))
 printf 'elapsed: %02d:%02d\n' $((ELAPSED/60)) $((ELAPSED%60))
+
+echo "==> 実行終了: ${SCRIPT_PATH}"

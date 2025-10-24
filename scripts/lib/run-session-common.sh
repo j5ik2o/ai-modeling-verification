@@ -154,7 +154,7 @@ rsc_exec_prompt() {
     cmd=(codex exec --full-auto)
     ;;
   claude)
-    cmd=(claude --dangerously-skip-permissions -p)
+    cmd=(claude --dangerously-skip-permissions --verbose -p)
     ;;
   gemini)
     cmd=(gemini --yolo -p)
