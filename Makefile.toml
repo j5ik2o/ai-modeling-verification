@@ -26,6 +26,6 @@ workspace = false
 
 [tasks.run-precise]
 description = "docs/precise のプロンプトを Codex へ送信する"
-command = "./scripts/run-preceise.sh"
+command = "./scripts/run-precise.sh"
 args = ["${@}"]
 workspace = false

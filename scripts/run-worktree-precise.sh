@@ -4,7 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
-TMP_BASE="$(mktemp -d "${TMPDIR:-/tmp}/preceise-worktree.XXXXXX")"
+TMP_BASE="$(mktemp -d "${TMPDIR:-/tmp}/precise-worktree.XXXXXX")"
 WORKTREE_PATH="${TMP_BASE}/worktree"
 
 cleanup() {
@@ -15,4 +15,4 @@ trap cleanup EXIT INT TERM
 
 git -C "${REPO_ROOT}" worktree add --force "${WORKTREE_PATH}" HEAD
 
-(cd "${WORKTREE_PATH}" && ./scripts/run-preceise.sh "$@")
+(cd "${WORKTREE_PATH}" && ./scripts/run-precise.sh "$@")
