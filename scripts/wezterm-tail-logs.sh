@@ -68,9 +68,27 @@ else:
 PY
 }
 
+build_tail_command() {
+  local file="$1"
+  local awk_script
+  awk_script=$(cat <<'AWK'
+BEGIN{IGNORECASE=1}
+function highlight(line){printf "\033[31m%s\033[0m\n", line}
+/^test result:/ {print; next}
+/^[[:space:]]*error(\[[^]]+\])?:/ {highlight($0); next}
+/(^|[[:space:]])FAILED([[:space:]]|$)/ {highlight($0); next}
+/^failures:/ {highlight($0); next}
+/panicked/ {highlight($0); next}
+{print}
+AWK
+)
+  printf 'tail -F %q | awk %q' "${file}" "${awk_script}"
+}
+
 # 1. 新しいウィンドウで左上ペインを作成
 capture_state "${before_json}"
-wezterm cli spawn --new-window --cwd "${RUN_DIR}" -- sh -lc "tail -f ambiguous-a.log"
+wezterm cli spawn --new-window --cwd "${RUN_DIR}" -- \
+  sh -lc "$(build_tail_command "ambiguous-a.log")"
 capture_state "${after_json}"
 read -r TARGET_WINDOW LEFT_TOP_PANE < <(extract_new_window_and_pane "${before_json}" "${after_json}")
 
@@ -81,7 +99,7 @@ wezterm cli set-tab-title --pane-id "${LEFT_TOP_PANE}" "ambiguous-a"
 # 2. 左上ペインを左右に分割し、右上を取得
 capture_state "${before_json}"
 wezterm cli split-pane --pane-id "${LEFT_TOP_PANE}" --right --cwd "${RUN_DIR}" -- \
-  sh -lc "tail -f ambiguous-b.log"
+  sh -lc "$(build_tail_command "ambiguous-b.log")"
 capture_state "${after_json}"
 RIGHT_TOP_PANE="$(extract_new_pane "${before_json}" "${after_json}" "${TARGET_WINDOW}")"
 wezterm cli set-tab-title --pane-id "${RIGHT_TOP_PANE}" "ambiguous-b"
@@ -89,7 +107,7 @@ wezterm cli set-tab-title --pane-id "${RIGHT_TOP_PANE}" "ambiguous-b"
 # 3. 左列を上下に分割し、左下を取得
 capture_state "${before_json}"
 wezterm cli split-pane --pane-id "${LEFT_TOP_PANE}" --bottom --percent 50 --cwd "${RUN_DIR}" -- \
-  sh -lc "tail -f precise-a.log"
+  sh -lc "$(build_tail_command "precise-a.log")"
 capture_state "${after_json}"
 LEFT_BOTTOM_PANE="$(extract_new_pane "${before_json}" "${after_json}" "${TARGET_WINDOW}")"
 wezterm cli set-tab-title --pane-id "${LEFT_BOTTOM_PANE}" "precise-a"
@@ -97,7 +115,7 @@ wezterm cli set-tab-title --pane-id "${LEFT_BOTTOM_PANE}" "precise-a"
 # 4. 右列を上下に分割し、右下を取得
 capture_state "${before_json}"
 wezterm cli split-pane --pane-id "${RIGHT_TOP_PANE}" --bottom --percent 50 --cwd "${RUN_DIR}" -- \
-  sh -lc "tail -f precise-b.log"
+  sh -lc "$(build_tail_command "precise-b.log")"
 capture_state "${after_json}"
 RIGHT_BOTTOM_PANE="$(extract_new_pane "${before_json}" "${after_json}" "${TARGET_WINDOW}")"
 wezterm cli set-tab-title --pane-id "${RIGHT_BOTTOM_PANE}" "precise-b"
