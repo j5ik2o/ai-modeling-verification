@@ -23,7 +23,11 @@ start_job() {
   echo "  log: ${log_path}" >&2
 }
 
-start_job "ambiguous" "${SCRIPT_DIR}/run-worktree-ambiguous.sh" "$@"
-start_job "precise" "${SCRIPT_DIR}/run-worktree-precise.sh" "$@"
+extra_args=("$@")
+
+start_job "ambiguous-a" "${SCRIPT_DIR}/run-worktree-ambiguous.sh" model-a "${extra_args[@]}"
+start_job "ambiguous-b" "${SCRIPT_DIR}/run-worktree-ambiguous.sh" model-b "${extra_args[@]}"
+start_job "precise-a" "${SCRIPT_DIR}/run-worktree-precise.sh" model-a "${extra_args[@]}"
+start_job "precise-b" "${SCRIPT_DIR}/run-worktree-precise.sh" model-b "${extra_args[@]}"
 
 echo "jobs launched. details in ${run_dir}" >&2
