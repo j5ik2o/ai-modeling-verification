@@ -75,8 +75,8 @@ capture_state "${after_json}"
 read -r TARGET_WINDOW LEFT_TOP_PANE < <(extract_new_window_and_pane "${before_json}" "${after_json}")
 
 # ウィンドウタイトルを設定
-wezterm cli set-window-title --window-id "${TARGET_WINDOW}" --title "AI Logs"
-wezterm cli set-tab-title --pane-id "${LEFT_TOP_PANE}" --title "ambiguous-a"
+wezterm cli set-window-title --window-id "${TARGET_WINDOW}" "AI Logs"
+wezterm cli set-tab-title --pane-id "${LEFT_TOP_PANE}" "ambiguous-a"
 
 # 2. 左上ペインを左右に分割し、右上を取得
 capture_state "${before_json}"
@@ -84,7 +84,7 @@ wezterm cli split-pane --pane-id "${LEFT_TOP_PANE}" --right --cwd "${RUN_DIR}" -
   sh -lc "tail -f ambiguous-b.log"
 capture_state "${after_json}"
 RIGHT_TOP_PANE="$(extract_new_pane "${before_json}" "${after_json}" "${TARGET_WINDOW}")"
-wezterm cli set-tab-title --pane-id "${RIGHT_TOP_PANE}" --title "ambiguous-b"
+wezterm cli set-tab-title --pane-id "${RIGHT_TOP_PANE}" "ambiguous-b"
 
 # 3. 左列を上下に分割し、左下を取得
 capture_state "${before_json}"
@@ -92,7 +92,7 @@ wezterm cli split-pane --pane-id "${LEFT_TOP_PANE}" --bottom --percent 50 --cwd 
   sh -lc "tail -f precise-a.log"
 capture_state "${after_json}"
 LEFT_BOTTOM_PANE="$(extract_new_pane "${before_json}" "${after_json}" "${TARGET_WINDOW}")"
-wezterm cli set-tab-title --pane-id "${LEFT_BOTTOM_PANE}" --title "precise-a"
+wezterm cli set-tab-title --pane-id "${LEFT_BOTTOM_PANE}" "precise-a"
 
 # 4. 右列を上下に分割し、右下を取得
 capture_state "${before_json}"
@@ -100,7 +100,7 @@ wezterm cli split-pane --pane-id "${RIGHT_TOP_PANE}" --bottom --percent 50 --cwd
   sh -lc "tail -f precise-b.log"
 capture_state "${after_json}"
 RIGHT_BOTTOM_PANE="$(extract_new_pane "${before_json}" "${after_json}" "${TARGET_WINDOW}")"
-wezterm cli set-tab-title --pane-id "${RIGHT_BOTTOM_PANE}" --title "precise-b"
+wezterm cli set-tab-title --pane-id "${RIGHT_BOTTOM_PANE}" "precise-b"
 
 # 5. フォーカスを左上に戻す
 wezterm cli activate-pane-direction --pane-id "${RIGHT_TOP_PANE}" Left
