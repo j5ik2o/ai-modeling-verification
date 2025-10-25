@@ -70,7 +70,7 @@ layout: two-cols
 
 ## 実験設計
 
-- `scripts/run-worktree-all.sh` が4ジョブを並列投入し、各ジョブは一時 worktree で `claude` モードを駆動
+- `scripts/run-worktree-all.sh` が4ジョブを並列投入し、各ジョブは `tmp/worktrees/<prefix>-<model>-<mode>-XXXXXX` に作成した worktree で `claude` モードを駆動
 - 実行ごとにログと PID を `tmp/ai-modeling-verification-logs` 配下に保存し、終了後に `experiments/run-20251025-070615/logs` へ収集
 - 成果物：各ログ (`*.log`)、補助 PID (`*.pid`)、デモ動画 `2025-10-25 07-06-22.mp4`
 - 計測指標：テスト結果（単体・受入）、経過時間、代表エラーメッセージ
