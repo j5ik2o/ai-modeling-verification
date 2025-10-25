@@ -9,6 +9,7 @@ Cargo.toml.bak
 .DS_Store
 *.profraw
 .serena/
+.claude/settings.local.json
 
 # experiment artifacts
 experiments/**/*.mp4
