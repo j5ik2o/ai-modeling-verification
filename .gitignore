@@ -12,3 +12,6 @@ Cargo.toml.bak
 
 # experiment artifacts
 experiments/**/*.mp4
+
+# local log outputs
+tmp/

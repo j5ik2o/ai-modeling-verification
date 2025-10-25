@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-LOG_ROOT="${TMPDIR:-/tmp}/ai-modeling-verification-logs"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+LOG_ROOT="${REPO_ROOT}/tmp/ai-modeling-verification-logs"
 RUN_DIR="$(ls -td "${LOG_ROOT}"/run-* 2>/dev/null | head -n 1)"
 
 if [[ -z "${RUN_DIR}" ]]; then

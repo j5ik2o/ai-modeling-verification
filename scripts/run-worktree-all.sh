@@ -2,9 +2,10 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 timestamp="$(date +%Y%m%d-%H%M%S)"
-log_root="${TMPDIR:-/tmp}/ai-modeling-verification-logs"
+log_root="${REPO_ROOT}/tmp/ai-modeling-verification-logs"
 run_dir="${log_root}/run-${timestamp}"
 
 mkdir -p "${run_dir}"
