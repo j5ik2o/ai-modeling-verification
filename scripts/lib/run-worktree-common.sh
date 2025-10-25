@@ -22,7 +22,10 @@ rwt_run() {
     return 1
   fi
 
-  local worktree_root="${repo_root}/tmp/worktrees"
+  local run_timestamp
+  run_timestamp="${RWT_RUN_TIMESTAMP:-$(date +%Y%m%d-%H%M%S)}"
+
+  local worktree_root="${repo_root}/tmp/worktrees/run-${run_timestamp}"
   mkdir -p "${worktree_root}"
 
   local mode_hint="claude"
