@@ -175,7 +175,7 @@ rsc_run_package_tests() {
   local status=0
 
   echo "[tests] cargo test -p ${package} $*" >&2
-  if ! (cd "${root_dir}" && cargo test -p "${package}" "$@" 2>&1); then
+  if ! (cd "${root_dir}" && RUST_BACKTRACE="${RUST_BACKTRACE:-1}" cargo test -p "${package}" "$@" 2>&1); then
     echo "cargo test failed for package ${package} (continuing)" >&2
     status=1
   fi
