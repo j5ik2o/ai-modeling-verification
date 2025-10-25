@@ -25,8 +25,6 @@
 
 **重要**: 既存のドメインモデル型（`KwhMilli`, `MoneyYen`, `RateYenPerKwh`等）を積極的に活用してください。
 
-ultrathink
-
 ---
 
 ## 🎯 実装タスク
