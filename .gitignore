@@ -9,3 +9,6 @@ Cargo.toml.bak
 .DS_Store
 *.profraw
 .serena/
+
+# experiment artifacts
+experiments/**/*.mp4
