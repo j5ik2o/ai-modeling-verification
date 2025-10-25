@@ -22,21 +22,47 @@ rwt_run() {
     return 1
   fi
 
-  local tmp_base
-  tmp_base="$(mktemp -d "${TMPDIR:-/tmp}/${tmp_prefix}-worktree.XXXXXX")"
-  local worktree_path="${tmp_base}/worktree"
+  local worktree_root="${repo_root}/tmp/worktrees"
+  mkdir -p "${worktree_root}"
 
-  cleanup() {
-    git -C "${repo_root}" worktree remove --force "${worktree_path}" >/dev/null 2>&1 || true
-    rm -rf "${tmp_base}"
-  }
+  local mode_hint="claude"
+  local prompt_hint="model-a"
+  local expect_mode_value=0
 
-  trap cleanup EXIT INT TERM
+  for arg in "$@"; do
+    if ((expect_mode_value)); then
+      mode_hint="${arg}"
+      expect_mode_value=0
+      continue
+    fi
+    case "${arg}" in
+      --mode=*)
+        mode_hint="${arg#--mode=}"
+        ;;
+      --mode)
+        expect_mode_value=1
+        ;;
+      model-a|a)
+        prompt_hint="model-a"
+        ;;
+      model-b|b)
+        prompt_hint="model-b"
+        ;;
+    esac
+  done
+
+  # 正規化してディレクトリ名に安全な形式へ揃える
+  local safe_mode safe_prompt
+  safe_mode="$(printf '%s' "${mode_hint}" | tr '[:upper:]' '[:lower:]' | tr -c '[:alnum:]-' '-')"
+  safe_prompt="$(printf '%s' "${prompt_hint}" | tr '[:upper:]' '[:lower:]' | tr -c '[:alnum:]-' '-')"
+
+  local worktree_path
+  worktree_path="$(mktemp -d "${worktree_root}/${tmp_prefix}-${safe_prompt}-${safe_mode}.XXXXXX")"
 
   git -C "${repo_root}" worktree add --force "${worktree_path}" HEAD
+  echo "worktree created: ${worktree_path}" >&2
 
   (cd "${worktree_path}" && "./scripts/${target_script}" "$@")
 
-  trap - EXIT INT TERM
-  cleanup
+  echo "worktree preserved at ${worktree_path}" >&2
 }
