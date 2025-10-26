@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Claude Code 用あいまいプロンプトを送信するヘルパースクリプト。
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
+SCRIPT_PATH="${SCRIPT_DIR}/${SCRIPT_NAME}"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+printf '==> 実行開始: %s' "${SCRIPT_PATH}"
+if (($#)); then
+  printf ' %q' "$@"
+fi
+printf '\n'
+
+source "${SCRIPT_DIR}/lib/run-session-common.sh"
+
+START_TIME=$(date +%s)
+
+rsc_parse_args "$@"
+
+PROMPT_FILE="$(rsc_prompt_file "${ROOT_DIR}" "ambiguous" "${RSC_PROMPT_KEY}")"
+RESET_SCRIPT="$(rsc_reset_script "${SCRIPT_DIR}" "${RSC_PROMPT_KEY}")"
+
+rsc_ensure_file_exists "${PROMPT_FILE}" "プロンプトファイルが見つかりません"
+rsc_ensure_executable "${RESET_SCRIPT}" "リセットスクリプトが実行できません"
+
+"${RESET_SCRIPT}"
+
+rsc_exec_prompt "${RSC_MODE}" "${PROMPT_FILE}"
+
+rsc_run_tests "${ROOT_DIR}" "${RSC_PROMPT_KEY}" || true
+
+END_TIME=$(date +%s)
+ELAPSED=$((END_TIME - START_TIME))
+printf 'elapsed: %02d:%02d\n' $((ELAPSED/60)) $((ELAPSED%60))
+
+printf '==> 実行終了: %s' "${SCRIPT_PATH}"
+if (($#)); then
+  printf ' %q' "$@"
+fi
+printf '\n'

@@ -1,0 +1,13 @@
+[workspace]
+resolver = "2"
+members = [
+    "modules/model-a-non-avdm",
+    "modules/model-b-avdm",
+    "spec-tests"
+]
+
+
+[workspace.dependencies]
+uuid = "1"
+time = "0.3"
+thiserror = "1"

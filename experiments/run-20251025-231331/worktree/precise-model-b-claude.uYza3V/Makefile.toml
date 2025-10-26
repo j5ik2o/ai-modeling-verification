@@ -1,0 +1,31 @@
+[tasks.clippy]
+description = "Run cargo clippy for all workspace targets with warnings as errors"
+command = "cargo"
+args = ["clippy", "--workspace", "--all-targets", "--", "-D", "warnings"]
+
+[tasks.model-a-code-reset]
+description = "modules/model-a-non-avdm/src/session.rs をリセットする"
+command = "./scripts/model-a-code-reset.sh"
+workspace = false
+
+[tasks.model-b-code-reset]
+description = "modules/model-b-avdm/src/session/base.rs をリセットする"
+command = "./scripts/model-b-code-reset.sh"
+workspace = false
+
+[tasks.all-code-reset]
+description = "model-a と model-b のコードを todo!(\"AIに実装させる\") にリセットする"
+dependencies = ["model-a-code-reset", "model-b-code-reset"]
+workspace = false
+
+[tasks.run-ambiguous]
+description = "docs/ambiguous のプロンプトを Codex へ送信する"
+command = "./scripts/run-ambiguous.sh"
+args = ["${@}"]
+workspace = false
+
+[tasks.run-precise]
+description = "docs/precise のプロンプトを Codex へ送信する"
+command = "./scripts/run-precise.sh"
+args = ["${@}"]
+workspace = false

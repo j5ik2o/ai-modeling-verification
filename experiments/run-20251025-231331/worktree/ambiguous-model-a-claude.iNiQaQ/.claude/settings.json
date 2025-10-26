@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "defaultMode": "default",
+    "allow": [
+      "Edit",
+      "MultiEdit",
+      "Write",
+      "Bash(cargo build)",
+      "Bash(cargo test:*)",
+      "Bash(cargo fmt)"
+    ],
+    "ask": [
+      "Bash(*)"
+    ],
+    "deny": []
+  }
+}
