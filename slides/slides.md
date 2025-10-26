@@ -11,6 +11,10 @@ transition: slide-left
 title: AIモデリング検証
 mdc: true
 layout: cover
+fonts:
+  sans: 'Noto Sans JP'
+  serif: 'Noto Serif JP'
+  mono: 'Fira Code'
 ---
 
 # AIモデリング検証
