@@ -16,3 +16,6 @@ experiments/**/*.mp4
 
 # local log outputs
 tmp/
+
+# playwright screenshots
+.playwright-mcp/
