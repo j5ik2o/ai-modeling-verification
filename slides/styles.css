@@ -17,11 +17,15 @@
 }
 
 .slidev-layout.cover {
-  background-image: url("/images/background.png");
-  background-repeat: no-repeat;
-  background-position: center center;
-  background-size: cover;
-  color: transparent !important;
+  background-color: #FFFFFF !important;
+  background-image: none !important;
+  color: #13202F !important;
+}
+
+.slidev-layout.cover h1 {
+  color: #13202F !important;
+  font-size: 3rem !important;
+  font-weight: 700 !important;
 }
 
 * {
@@ -43,8 +47,8 @@ h3 {
 }
 
 strong {
-  color: #3a05f8;
-  font-weight: bold;
+  color: #2505c8;
+  font-weight: 700;
 }
 
 em {
@@ -85,8 +89,10 @@ small {
   overflow-x: auto;
   max-height: 65vh;
   overflow-y: auto;
-  font-size: 10px !important;
-  line-height: 1.24 !important;
+  font-size: 13px !important;
+  line-height: 1.4 !important;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
 }
 
 .slidev-layout pre.slidev-code code {
@@ -111,4 +117,34 @@ small {
 
 .slidev-layout p + ul {
   margin-top: 0.1rem;
+}
+
+/* 表のスタイル */
+.slidev-layout table {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.slidev-layout thead {
+  background-color: #f0f0f5;
+}
+
+.slidev-layout th {
+  padding: 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 2px solid #d0d0d8;
+}
+
+.slidev-layout td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #e8e8ed;
+}
+
+/* セクション見出し（太字）の余白 */
+.slidev-layout p strong:first-child {
+  display: inline-block;
+  margin-top: 0.5rem;
 }

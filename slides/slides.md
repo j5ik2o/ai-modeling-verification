@@ -20,19 +20,44 @@ layout: cover
 # アジェンダ
 
 - 背景と目的
-- 実験設計と計測方法
-- 4実験の結果サマリ
-- 失敗から学ぶ（ambiguous × model-a）
-- 成功パターン（precise プロンプト）
-- デモ運用と自動化の工夫
+- AVDM (Always-Valid Domain Model) とは
+- お題と実験設計
+- デモと実験結果
+- 失敗パターン（曖昧プロンプト × 非AVDM）
+- 成功パターン（AVDM と明確プロンプト）
 - 学び・次のアクション
 
 ---
 
 # 背景と目的
 
-- AIコーディング支援を利用しつつ、Always-Valid Domain Model(AVDM) が品質に与える影響を検証
+**背景**
+- AIコーディング支援の活用が進む中、ドメインモデルの設計がコード品質に与える影響を定量的に測定したい
+
+**目的**
+- Always-Valid Domain Model(AVDM) が品質に与える影響を検証
 - EV充電料金計算ドメインで、**曖昧 vs 明確**プロンプト、**非AVDM(model-a) vs AVDM(model-b)** の4通りを比較
+
+---
+
+# AVDM (Always-Valid Domain Model) とは
+
+**コンセプト**
+- 不正な状態を型レベルで防ぐドメインモデリング手法
+- 値オブジェクトに不変条件を組み込み、無効な値の生成を防止
+
+**仕組み**
+- コンストラクタで不変条件を検証
+- 検証失敗時は `Result` 型でエラーを返却
+- 一度生成されたオブジェクトは常に正しい状態を保証
+
+**例: ChargeableEnergy**
+```rust
+pub fn new(total: KwhMilli, billed: KwhMilli) -> Result<Self, ...> {
+  if billed > total { return Err(...); }  // 不変条件: billed ≤ total
+  Ok(Self { total, billed })
+}
+```
 
 ---
 
@@ -116,7 +141,7 @@ elapsed: 02:54 (model-b precise)
 
 ---
 
-# 曖昧プロンプト × 非AVDM 失敗の実相
+# 曖昧プロンプト × 非AVDM 失敗の実相(1/2)
 
 ```
 assertion `left == right` failed: model-a billed energy mismatch for scenario1_six_minutes
@@ -126,6 +151,10 @@ assertion `left == right` failed: model-a billed energy mismatch for scenario1_s
 
 - 無料5分の按分ロジックが欠落し、6分目以降の課金量が過大になった（scenario1/5/11/stop が失敗）
 - 時間が延びれば料金が増えるはず（単調増加）という前提や、同じ入力なら必ず同じ結果になる決定性（Determinism。参照透明性を成立させる前提の一つ）が壊れ、受入テスト 9 本のうち 4 本が連鎖的に失敗
+
+---
+
+# 曖昧プロンプト × 非AVDM 失敗の実相(2/2)
 
 ```rust
 if elapsed_millis <= FREE_DURATION_MILLIS {
@@ -141,12 +170,6 @@ session.billed_kwh_milli = session.kwh_milli;
 - その結果、`stop_scenarios_match_expected`（backtrace: `spec-tests/tests/common.rs:104`）が想定値 400 ミリkWh に対し 2400 ミリkWh を返し、連鎖的に scenario5/11 と決定性検証が破綻
 - <small>解析ログ: `experiments/run-20251025-231331/ambiguous-a.log`</small>
 - **非AVDM** では例外を型で防げず、バグが再注入されやすい
-
-<!-- Speaker Notes:
-- このスライドでは scenario1/5/11/stop を例示しつつ、他の失敗も同じ按分欠落が原因だったと口頭で補足する
-- `spec-tests/tests/common.rs:104` のアサーションがシナリオ期待値との突合せである点、ここからバグを掘った手順を説明する
-- `ambiguous-a.log` には `Session already ended` 系の過去ログも残っており、曖昧プロンプトが同じ罠に繰り返し陥ったことを指摘する
--->
 
 ---
 
