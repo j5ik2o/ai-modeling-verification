@@ -57,13 +57,13 @@ layout: two-cols
 
 ## プロンプト定義
 
+- **明確なプロンプト**
+    - 目的・変更範囲・ビジネスルール・テスト基準を明文化
+    - 例: 「`modules/model-a-non-avdm/src/session.rs` の `stop` を修正し、受入テスト `scenario6` を通す。状態遷移図に合わせて Stop 後の二重課金を防ぐこと」
 - **あいまいプロンプト**
   - タスク目標は示すが、変更対象や受け入れ条件が曖昧
   - 「料金計算を直してください」「失敗テストをとにかく通す」など抽象的な指示
   - LLM側の推測が増え、ドメイン制約を踏み外す危険が高い
-- **明確なプロンプト**
-  - 目的・変更範囲・ビジネスルール・テスト基準を明文化
-  - 例: 「`modules/model-a-non-avdm/src/session.rs` の `stop` を修正し、受入テスト `scenario6` を通す。状態遷移図に合わせて Stop 後の二重課金を防ぐこと」
 - LLM の探索余地を適切に絞り、決定的な挙動と再現性を高める
 
 ---
@@ -90,6 +90,12 @@ layout: two-cols
 
 > ⚠️ `model-a billed energy mismatch` が scenario1/5/11/stop 検証で発生し、曖昧プロンプト × model-a が再び破綻。
 
+<!-- Speaker Notes:
+- 表の指標はすべて `tmp/logs/run-20251025-231331` の同一ランから抽出した値であると冒頭に念押しする
+- 単体テスト件数は生成タスクに依存し、model-b では AVDM の防衛ロジック追加でテスト数も自然に増えたことを補足する
+- 経過時間は `elapsed` ログをそのまま記載しており、プロンプト解像度とモデル選択が実際のリードタイムにどう響いたかを口頭で解説する
+-->
+
 ---
 layout: center
 ---
@@ -103,7 +109,7 @@ assertion `left == right` failed: model-a billed energy mismatch for scenario1_s
 ```
 
 - 無料5分の按分ロジックが欠落し、6分目以降の課金量が過大になった（scenario1/5/11/stop が失敗）
-- 受入テスト 5/9 が崩壊し、モノトニック性と決定性の保証が消失
+- 時間が延びれば料金が増えるはず（単調増加）という前提や、同じ入力なら必ず同じ結果になる決定性（Determinism。参照透明性を成立させる前提の一つ）が壊れ、受入テスト 9 本のうち 4 本が連鎖的に失敗
 - 生成コード: `tmp/worktrees/run-20251025-231331/ambiguous-model-a-claude.iNiQaQ/modules/model-a-non-avdm/src/session.rs:73-95` で無料時間を判定後も `session.billed_kwh_milli = session.kwh_milli;` と全量課金。FREE_DURATION 定数を持ちながら、時間按分が未実装のまま残った
 ```rust
 if elapsed_millis <= FREE_DURATION_MILLIS {
@@ -120,15 +126,39 @@ session.billed_kwh_milli = session.kwh_milli;
 - 解析ログ: `tmp/logs/run-20251025-231331/ambiguous-a.log`
 - **非AVDM** では例外を型で防げず、バグが再注入されやすい
 
----
-layout: two-cols
----
-## あいまいプロンプト × AVDM が踏みとどまった要因
+<!-- Speaker Notes:
+- このスライドでは scenario1/5/11/stop を例示しつつ、他の失敗も同じ按分欠落が原因だったと口頭で補足する
+- `spec-tests/tests/common.rs:104` のアサーションがシナリオ期待値との突合せである点、ここからバグを掘った手順を説明する
+- `ambiguous-a.log` には `Session already ended` 系の過去ログも残っており、曖昧プロンプトが同じ罠に繰り返し陥ったことを指摘する
+-->
 
-- AVDM により `Session` が不変条件を保持、曖昧指示でも破壊的変更が拒否
-- 受入テスト 9/9 合格、単体テストも完全成功
-- 時間は要したが、ロジック破綻は発生せず（`elapsed: 03:22`）
+---
+layout: center
+---
+## あいまいプロンプト × AVDM が踏みとどまった要因(1/2)
+
+```text
+test scenario5_progressive_billing_is_monotonic ... ok
+test scenario6_rejects_billing_after_stop ... ok
+test stop_scenarios_match_expected ... ok
+```
+
+- `SessionTimeline` や `ChargeableEnergy` など AVDM の値オブジェクトが不変条件を担保し、AI が生成した `Session` の変更でも型制約が破綻を防いだ
+- 編集開始前に AI が値オブジェクト実装を読み込み（ログ冒頭: `tmp/logs/run-20251025-231331/ambiguous-b.log:10-60`）、不変条件を先に理解してから `Session` 実装へ着手
+- <small>受入テスト `scenario10_invalid_timeline_is_rejected` / `scenario9_negative_energy_is_rejected` / `scenario15_energy_over_limit_is_rejected` が全て成功し、終了時刻逆転・負/過大エネルギーを自動的に拒否（ログ: `tmp/logs/run-20251025-231331/ambiguous-b.log:118-128`）</small>
+- 受入テスト 9/9 合格、単体テストも完全成功。時間は要したが、ロジック破綻は発生せず（`elapsed: 03:22`）
 - 解析ログ: `tmp/logs/run-20251025-231331/ambiguous-b.log`
+ 
+<!-- Speaker Notes:
+- 冒頭ログ（10-60 行）で VO 実装を読んでから修正に入った流れを説明し、曖昧プロンプトでも先にドメインルールを取り込めば成功率が上がると強調する
+- `scenario10` `scenario9` `scenario15` が一発合格したのはタイムライン・エネルギー・金額 VO がそれぞれガードとして動いた結果だと口頭で補足する
+- 右側ログは受入テストの成功抜粋なので、ここを指し示しながら QA チームとの共有方法を話す
+-->
+
+---
+
+## あいまいプロンプト × AVDM が踏みとどまった要因(2/2)
+
 ```rust
 fn compute_bill(...) -> Result<SessionBill, SessionValueError> {
   let timeline = SessionTimeline::between(started_at, ended_at)?;
@@ -137,16 +167,12 @@ fn compute_bill(...) -> Result<SessionBill, SessionValueError> {
   SessionBill::settle(energy, rate)
 }
 ```
-<small>コード出典: `tmp/worktrees/run-20251025-231331/ambiguous-model-b-claude.GOkY2q/modules/model-b-avdm/src/session/base.rs:58-84`</small>
+
+コード出典: `tmp/worktrees/run-20251025-231331/ambiguous-model-b-claude.GOkY2q/modules/model-b-avdm/src/session/base.rs:58-84`
+
 - `consume_grace_period` が型レベルで無料5分を控除し、ChargeableEnergy が負値や超過量を拒否
 - 生成コード: `tmp/worktrees/run-20251025-231331/ambiguous-model-b-claude.GOkY2q/modules/model-b-avdm/src/session/base.rs:58-84`
 
-::right::
-```text
-test scenario5_progressive_billing_is_monotonic ... ok
-test scenario6_rejects_billing_after_stop ... ok
-test stop_scenarios_match_expected ... ok
-```
 
 ---
 layout: two-cols
