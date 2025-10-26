@@ -41,7 +41,7 @@ layout: two-cols
 
 ---
 
-## 問題領域のざっくり像（EV充電）
+## お題:EV充電料金の計算
 
 - ユーザーが充電スタンドで `start` → `snapshot`（途中課金確認）→ `stop` する流れをモデル化
 - 課金の基本式：**料金 = 単価（円/kWh） × 課金対象エネルギー**
@@ -55,7 +55,7 @@ layout: two-cols
 
 ---
 
-## プロンプト定義（概要）
+## プロンプト定義
 
 - **あいまいプロンプト**
   - タスク目標は示すが、変更対象や受け入れ条件が曖昧
@@ -64,7 +64,7 @@ layout: two-cols
 - **明確なプロンプト**
   - 目的・変更範囲・ビジネスルール・テスト基準を明文化
   - 例: 「`modules/model-a-non-avdm/src/session.rs` の `stop` を修正し、受入テスト `scenario6` を通す。状態遷移図に合わせて Stop 後の二重課金を防ぐこと」
-  - LLM の探索余地を適切に絞り、 determinism と再現性を高める
+- LLM の探索余地を適切に絞り、決定的な挙動と再現性を高める
 
 ---
 
@@ -104,6 +104,19 @@ assertion `left == right` failed: model-a billed energy mismatch for scenario1_s
 
 - 無料5分の按分ロジックが欠落し、6分目以降の課金量が過大になった（scenario1/5/11/stop が失敗）
 - 受入テスト 5/9 が崩壊し、モノトニック性と決定性の保証が消失
+- 生成コード: `tmp/worktrees/run-20251025-231331/ambiguous-model-a-claude.iNiQaQ/modules/model-a-non-avdm/src/session.rs:73-95` で無料時間を判定後も `session.billed_kwh_milli = session.kwh_milli;` と全量課金。FREE_DURATION 定数を持ちながら、時間按分が未実装のまま残った
+```rust
+if elapsed_millis <= FREE_DURATION_MILLIS {
+    session.billed_kwh_milli = 0;
+    // ...
+    return Ok(0);
+}
+
+// 無料期間を差し引かず全量を課金対象に設定してしまう
+session.billed_kwh_milli = session.kwh_milli;
+```
+<small>コード出典: `tmp/worktrees/run-20251025-231331/ambiguous-model-a-claude.iNiQaQ/modules/model-a-non-avdm/src/session.rs:73-95`</small>
+- その結果、`stop_scenarios_match_expected`（backtrace: `spec-tests/tests/common.rs:104`）が想定値 400 ミリkWh に対し 2400 ミリkWh を返し、連鎖的に scenario5/11 と決定性検証が破綻
 - 解析ログ: `tmp/logs/run-20251025-231331/ambiguous-a.log`
 - **非AVDM** では例外を型で防げず、バグが再注入されやすい
 
@@ -116,6 +129,17 @@ layout: two-cols
 - 受入テスト 9/9 合格、単体テストも完全成功
 - 時間は要したが、ロジック破綻は発生せず（`elapsed: 03:22`）
 - 解析ログ: `tmp/logs/run-20251025-231331/ambiguous-b.log`
+```rust
+fn compute_bill(...) -> Result<SessionBill, SessionValueError> {
+  let timeline = SessionTimeline::between(started_at, ended_at)?;
+  let window = timeline.consume_grace_period(Self::grace_period());
+  let energy = ChargeableEnergy::allocate(total_energy, window)?;
+  SessionBill::settle(energy, rate)
+}
+```
+<small>コード出典: `tmp/worktrees/run-20251025-231331/ambiguous-model-b-claude.GOkY2q/modules/model-b-avdm/src/session/base.rs:58-84`</small>
+- `consume_grace_period` が型レベルで無料5分を控除し、ChargeableEnergy が負値や超過量を拒否
+- 生成コード: `tmp/worktrees/run-20251025-231331/ambiguous-model-b-claude.GOkY2q/modules/model-b-avdm/src/session/base.rs:58-84`
 
 ::right::
 ```text
@@ -132,7 +156,7 @@ layout: two-cols
 
 - 明確な仕様提示により、model-a でも期待通りの修正が入り 9/9 合格
 - model-b では冗長な補強も入り、ドメインオブジェクトの自己診断が進化
-- 所要時間が短縮され、ワークフロー全体の determinism が向上
+- 所要時間が短縮され、ワークフロー全体の決定性が向上
 - 解析ログ: `tmp/logs/run-20251025-231331/precise-a.log` / `tmp/logs/run-20251025-231331/precise-b.log`
 
 ::right::
