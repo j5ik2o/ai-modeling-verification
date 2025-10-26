@@ -71,22 +71,24 @@ layout: two-cols
 ## 実験設計
 
 - `scripts/run-worktree-all.sh` が4ジョブを並列投入し、各ジョブは `tmp/worktrees/<prefix>-<model>-<mode>-XXXXXX` に作成した worktree で `claude` モードを駆動
-- 実行ごとにログと PID を `tmp/ai-modeling-verification-logs` 配下に保存し、終了後に `experiments/run-20251025-070615/logs` へ収集
-- 成果物：各ログ (`*.log`)、補助 PID (`*.pid`)、デモ動画 `2025-10-25 07-06-22.mp4`
+- 実行ごとにログと PID を `tmp/logs/<timestamp>` に保存し、必要に応じて worktree を `tmp/worktrees/<timestamp>` に保持（今回のラン: `tmp/logs/run-20251025-231331` / `tmp/worktrees/run-20251025-231331`）
+- 成果物：各ログ (`*.log`)、補助 PID (`*.pid`)、保存済み worktree、必要に応じてデモ動画
 - 計測指標：テスト結果（単体・受入）、経過時間、代表エラーメッセージ
 
 ---
 
 ## 実験結果マトリクス
 
+<small>データソース: `tmp/logs/run-20251025-231331`</small>
+
 | プロンプト | モデル | 単体テスト | 受入テスト | 経過時間 |
 |-------| --- | --- | --- | --- |
-| 明確    | model-a | ✅ 8/8 | ✅ 9/9 | 01:17 |
-| 明確    | model-b | ✅ 19/19 | ✅ 9/9 | 04:18 |
-| あいまい  | model-a | ✅ 8/8 | ⚠️ 4/9 | 03:14 |
-| あいまい  | model-b | ✅ 18/18 | ✅ 9/9 | 06:13 |
+| 明確    | model-a | ✅ 8/8 | ✅ 9/9 | 02:14 |
+| 明確    | model-b | ✅ 11/11 | ✅ 9/9 | 02:54 |
+| あいまい  | model-a | ✅ 16/16 | ⚠️ 5/9 | 03:15 |
+| あいまい  | model-b | ✅ 17/17 | ✅ 9/9 | 03:22 |
 
-> ⚠️ `Session already ended` が複数シナリオで発生し、ambiguous × model-a が失敗。
+> ⚠️ `model-a billed energy mismatch` が scenario1/5/11/stop 検証で発生し、曖昧プロンプト × model-a が再び破綻。
 
 ---
 layout: center
@@ -95,12 +97,14 @@ layout: center
 ## あいまいプロンプト × 非AVDM 失敗の実相
 
 ```
-model-a stop failed for scenario1_six_minutes: 計算失敗: Session already ended
-model-a snapshot failed at 3: 計算失敗: Session already ended
+assertion `left == right` failed: model-a billed energy mismatch for scenario1_six_minutes
+  left: 2400
+ right: 400
 ```
 
-- あいまいプロンプトのため、停止処理前提が崩れたコードが生成され状態遷移が破綻
-- 受入テスト 5/9 が崩壊し、停止後課金やモノトニック性が保証できなかった
+- 無料5分の按分ロジックが欠落し、6分目以降の課金量が過大になった（scenario1/5/11/stop が失敗）
+- 受入テスト 5/9 が崩壊し、モノトニック性と決定性の保証が消失
+- 解析ログ: `tmp/logs/run-20251025-231331/ambiguous-a.log`
 - **非AVDM** では例外を型で防げず、バグが再注入されやすい
 
 ---
@@ -110,7 +114,8 @@ layout: two-cols
 
 - AVDM により `Session` が不変条件を保持、曖昧指示でも破壊的変更が拒否
 - 受入テスト 9/9 合格、単体テストも完全成功
-- 時間は要したが、ロジック破綻は発生せず
+- 時間は要したが、ロジック破綻は発生せず（`elapsed: 03:22`）
+- 解析ログ: `tmp/logs/run-20251025-231331/ambiguous-b.log`
 
 ::right::
 ```text
@@ -128,14 +133,15 @@ layout: two-cols
 - 明確な仕様提示により、model-a でも期待通りの修正が入り 9/9 合格
 - model-b では冗長な補強も入り、ドメインオブジェクトの自己診断が進化
 - 所要時間が短縮され、ワークフロー全体の determinism が向上
+- 解析ログ: `tmp/logs/run-20251025-231331/precise-a.log` / `tmp/logs/run-20251025-231331/precise-b.log`
 
 ::right::
 ```text
-test result: ok. 9 passed; 0 failed
-elapsed: 01:17 (model-a precise)
+test result: ok. 9 passed; 0 failed; ... finished in 0.00s
+elapsed: 02:14 (model-a precise)
 
-test result: ok. 9 passed; 0 failed
-elapsed: 04:18 (model-b precise)
+test result: ok. 9 passed; 0 failed; ... finished in 0.00s
+elapsed: 02:54 (model-b precise)
 ```
 
 ---
@@ -143,7 +149,7 @@ elapsed: 04:18 (model-b precise)
 ## デモとリスク管理
 
 - 登壇当日は**録画済みデモ**を再生し、ライブ実行によるリスクを回避
-- 動画: `experiments/run-20251025-070615/2025-10-25 07-06-22.mp4`
+- 最新ログ: `tmp/logs/run-20251025-231331`（必要に応じて `experiments/` へ昇格予定）
 
 <video src="../experiments/run-20251025-070615/2025-10-25 07-06-22.mp4" controls style="width: 75%; margin: 1.5rem auto; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.4);"></video>
 
