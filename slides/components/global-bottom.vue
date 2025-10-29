@@ -1,7 +1,7 @@
 <template>
-  <div class="slidev-page-number-global">
+  <footer class="absolute bottom-0 left-0 right-0 p-2">
     {{ $slidev.nav.currentPage }} / {{ $slidev.nav.total }}
-  </div>
+  </footer>
 </template>
 
 <style>
