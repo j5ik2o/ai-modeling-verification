@@ -15,9 +15,11 @@ fonts:
   sans: 'Noto Sans JP'
   serif: 'Noto Serif JP'
   mono: 'Fira Code'
+hideInToc: true
 ---
 
-# 曖昧なプロンプトでも正しいコードが書ける理由
+# 曖昧なプロンプトでも
+# 正しいコードが書ける理由
 ## 〜 Always-Valid Domain Model の表現力 〜
 
 かとじゅん(@j5ik2o)
@@ -409,7 +411,7 @@ fn compute_bill(...) -> Result<SessionBill, SessionValueError> {
 
 ```rust
 pub fn new(total: KwhMilli, billed: KwhMilli) -> Result<Self, SessionValueError> {
-  if u64::from(billed) > u64::from(total) {
+  if billed > total {
     return Err(SessionValueError::EnergyOutOfRange {
       provided: u64::from(billed), max: u64::from(total)
     });
