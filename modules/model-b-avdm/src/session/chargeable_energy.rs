@@ -23,7 +23,7 @@ impl ChargeableEnergy {
   /// `billed` が `total` を超えている場合、`SessionValueError::EnergyOutOfRange`
   /// を返します。
   pub fn new(total: KwhMilli, billed: KwhMilli) -> Result<Self, SessionValueError> {
-    if u64::from(billed) > u64::from(total) {
+    if billed > total {
       return Err(SessionValueError::EnergyOutOfRange { provided: u64::from(billed), max: u64::from(total) });
     }
     Ok(Self { total, billed })

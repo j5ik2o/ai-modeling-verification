@@ -1,6 +1,6 @@
 use thiserror::Error;
 use time::OffsetDateTime;
-
+use crate::session::KwhMilli;
 use super::session_id::SessionId;
 
 /// セッション操作中に発生し得るドメインエラー。

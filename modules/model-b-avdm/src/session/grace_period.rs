@@ -1,7 +1,7 @@
 use super::MILLISECONDS_IN_MINUTE;
 
 /// 無料時間のウィンドウを表す値オブジェクト。
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct GracePeriod {
   millis: u128,
 }

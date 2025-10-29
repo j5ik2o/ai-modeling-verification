@@ -5,7 +5,7 @@ use time::OffsetDateTime;
 use super::{chargeable_window::ChargeableWindow, errors::SessionValueError, grace_period::GracePeriod};
 
 /// セッションの経過時間を表す値オブジェクト。
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct SessionTimeline {
   elapsed_millis: u128,
 }

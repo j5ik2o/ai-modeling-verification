@@ -1,9 +1,9 @@
 use std::convert::{From, TryFrom};
-
+use std::fmt::{format, Formatter};
 use super::{MAX_KWH_MILLI, bounded::BoundedU64, errors::SessionValueError};
 
 /// エネルギー量（ミリkWh単位）を表す値オブジェクト。
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct KwhMilli(pub(super) u64);
 
 impl KwhMilli {

@@ -148,3 +148,16 @@ small {
   display: inline-block;
   margin-top: 0.5rem;
 }
+
+/* ページ番号の表示 */
+.slidev-page-number {
+  position: fixed !important;
+  bottom: 1.2rem !important;
+  right: 1.5rem !important;
+  font-size: 0.85rem !important;
+  color: #888 !important;
+  font-family: 'Noto Sans JP', sans-serif !important;
+  z-index: 100 !important;
+  opacity: 0.8 !important;
+  display: block !important;
+}

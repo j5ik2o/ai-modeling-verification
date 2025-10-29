@@ -3,7 +3,7 @@ use std::convert::{From, TryFrom, TryInto};
 use super::{MAX_YEN, bounded::BoundedU64, errors::SessionValueError};
 
 /// 料金の金額（円）を 0 以上の整数で保持するドメイン値オブジェクト。
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct MoneyYen(pub(super) u64);
 
 impl MoneyYen {

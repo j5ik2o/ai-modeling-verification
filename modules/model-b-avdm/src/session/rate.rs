@@ -6,7 +6,7 @@ use std::{
 use super::{errors::SessionValueError, kwh_milli::KwhMilli, money_yen::MoneyYen};
 
 /// kWh あたりの料金単価（円）を表す値オブジェクト。
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct RateYenPerKwh(pub(super) NonZeroU32);
 
 impl RateYenPerKwh {

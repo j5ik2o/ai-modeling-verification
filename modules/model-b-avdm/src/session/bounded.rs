@@ -1,7 +1,7 @@
 /// 固定上限付きの `u64` 値を表すユーティリティ型。
 ///
 /// コンストラクタで上限検証を行うことで、不正な範囲の値を静的に排除する。
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct BoundedU64<const MAX: u64>(u64);
 
 impl<const MAX: u64> BoundedU64<MAX> {
